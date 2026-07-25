@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { Sparkles, PanelLeftOpen } from "lucide-react";
 import MarkdownContent from "@/components/MarkdownContent";
-import InputBar from "@/components/InputBar";
+import { AIChatInput as InputBar } from "@/components/ai-chat-input";
 import { GeminiStar } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import type { ModelId } from "@/lib/site";
@@ -34,6 +34,11 @@ const SUGGESTIONS = [
   "Summarize the Zapier automation guide.",
   "How would Derrick set up GTD in Asana?",
   "Which blueprints cover community building?",
+  "Explain Derrick's GoHighLevel workflow architecture.",
+  "How did Derrick improve executive focus time by 35%?",
+  "Walk me through Derrick's Salesforce admin pillars.",
+  "Which blueprints cover AI fluency for executives?",
+  "How does Derrick negotiate executive compensation?",
 ];
 
 export default function ChatArea(props: ChatAreaProps) {
