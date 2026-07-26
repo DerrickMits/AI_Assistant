@@ -89,7 +89,7 @@ const provider = createGoogleGenerativeAI({
 
 /** Map the UI model id to the Gemini model identifier. */
 export function pickModel(modelId: ModelId) {
-  const id = modelId === "pro" ? "gemini-2.5-pro" : "gemini-2.5-flash";
+  const id = modelId === "pro" ? "gemini-2.5-pro" : "gemini-3-flash-preview";
   return provider(id);
 }
 

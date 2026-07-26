@@ -1,4 +1,4 @@
-import { streamText } from "ai";
+import { streamText, createUIMessageStream, createUIMessageStreamResponse } from "ai";
 import { resolveChat } from "@/lib/ai";
 import { DEFAULT_MODEL, type ModelId } from "@/lib/site";
 import { CORS_ORIGINS } from "@/lib/site";
@@ -44,11 +44,6 @@ function corsHeaders(allowOrigin: string) {
 export async function POST(req: Request) {
   const origin = req.headers.get("origin") ?? "";
   const allowOrigin = CORS_ORIGINS.includes(origin) ? origin : "";
-  const headers: Record<string, string> = {
-    "content-type": "text/plain; charset=utf-8",
-    "x-vercel-ai-content-type": "text/plain; charset=utf-8",
-    ...corsHeaders(allowOrigin),
-  };
 
   let body: IncomingBody;
   try {
@@ -71,16 +66,22 @@ export async function POST(req: Request) {
   const model: ModelId = body.model === "pro" ? "pro" : DEFAULT_MODEL;
   const { system, model: aiModel, hasKey, retrieval } = resolveChat({ messages, model });
 
-  // When no live knowledge sources are reachable (e.g. serverless deploy
-  // without the sibling repos) be honest about it rather than hallucinate.
+  // When no knowledge is reachable on disk AND the live-fetch fallback also
+  // returned nothing (e.g. a cold deploy with no network to the sibling
+  // sites), be honest about it rather than hallucinate.
   if (!retrieval.articles.length && !retrieval.resources.length && !system.includes("Derrick")) {
     const note =
-      "I could not reach Derrick's live knowledge sources from this deployment, so I have no articles, blueprints, or profile data to ground on. Please cloud-build with access to the sibling repositories, or contact Derrick to wire them up.";
-    return streamText({ model: aiModel!, system, prompt:note }).toTextStreamResponse();
+      "I could not reach Derrick's live knowledge sources from this deployment, so I have no articles, blueprints, or profile data to ground on. Please ensure the sibling repositories are present (local) or reachable at the deployed URLs (production), or contact Derrick to wire them up.";
+    const result = streamText({ model: aiModel!, system, prompt: note });
+    return result.toUIMessageStreamResponse({
+      headers: corsHeaders(allowOrigin),
+    });
   }
 
   // Graceful fallback when no API key is configured so the UI still streams a
-  // coherent operator-facing answer plus the retrieved entries.
+  // coherent operator-facing answer plus the retrieved entries. We emit a
+  // v5 UI-message data stream by hand (no model is available), so `useChat`
+  // parses it into the assistant's `UIMessage.parts` as normal.
   if (!hasKey || !aiModel) {
     const fallback =
       "I'm Derrick's AI Assistant, but the GEMINI_API_KEY environment variable is not set on this deployment, so I cannot reach the model yet.\n\n" +
@@ -91,14 +92,8 @@ export async function POST(req: Request) {
         : retrieval.scores
             .map((sc) => `- ${sc.kind}: ${sc.id} (relevance ${sc.score})`)
             .join("\n"));
-    const encoder = new TextEncoder();
-    const stream = new ReadableStream<Uint8Array>({
-      start(controller) {
-        controller.enqueue(encoder.encode(fallback));
-        controller.close();
-      },
-    });
-    return new Response(stream, { headers });
+
+    return uiMessageTextResponse(fallback, corsHeaders(allowOrigin));
   }
 
   const turnMessages = messages
@@ -112,5 +107,40 @@ export async function POST(req: Request) {
     temperature: 0.4,
   });
 
-  return result.toTextStreamResponse({ headers });
+  // NOTE: do NOT set `content-type` / `x-vercel-ai-content-type` here.
+  // `toUIMessageStreamResponse` emits the v5 UI-message data-stream protocol and
+  // sets the right headers itself. Overriding `content-type: text/plain` makes
+  // the client `useChat` (default `streamProtocol: "data"`) treat the body as a
+  // plain text stream and never populate the assistant `UIMessage.parts`, so
+  // the reply shows empty / "Thinking..." forever.
+  return result.toUIMessageStreamResponse({
+    headers: corsHeaders(allowOrigin),
+  });
+}
+
+/**
+ * Emit a single text turn on the v5 UI-message data-stream protocol without a
+ * live model. This keeps the no-key fallback rendering correctly on the client
+ * (`useChat` parses the stream into `UIMessage.parts`).
+ */
+function uiMessageTextResponse(text: string, headers: Record<string, string>): Response {
+  const stream = createUIMessageStream({
+    execute: ({ writer }) => {
+      const id = "fallback-text";
+      writer.write({ type: "start" });
+      writer.write({ type: "start-step" });
+      writer.write({ type: "text-start", id });
+      // v5 UI-message stream: `text-delta` carries `delta`, not `text`.
+      writer.write({ type: "text-delta", id, delta: text });
+      writer.write({ type: "text-end", id });
+      writer.write({ type: "finish-step" });
+      writer.write({ type: "finish" });
+    },
+  });
+
+  return createUIMessageStreamResponse({
+    status: 200,
+    headers,
+    stream,
+  });
 }

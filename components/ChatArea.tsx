@@ -2,19 +2,17 @@
 
 import { useEffect, useRef } from "react";
 import { Sparkles, PanelLeftOpen } from "lucide-react";
+import type { UIMessage } from "@ai-sdk/ui-utils";
 import MarkdownContent from "@/components/MarkdownContent";
 import { AIChatInput as InputBar } from "@/components/ai-chat-input";
 import { GeminiStar } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
-interface ChatMessageLike {
-  id: string;
-  role: "user" | "assistant" | "system" | "data";
-  content: string;
-}
-
 interface ChatAreaProps {
-  messages: ChatMessageLike[];
+  // `useChat` exposes its turn list as `UIMessage[]` (AI SDK v5), where each
+  // message's visible text lives in `parts`, NOT a `content` field. Rendering
+  // off a nonexistent `m.content` leaves every assistant reply blank.
+  messages: UIMessage[];
   isStreaming: boolean;
   inputValue: string;
   onChangeInput: (v: string) => void;
@@ -22,6 +20,19 @@ interface ChatAreaProps {
   onStop: () => void;
   onOpenSidebar: () => void;
   sidebarOpen: boolean;
+}
+
+/**
+ * Flatten a UIMessage's v5 `parts` into a single markdown string for
+ * rendering. Only `text` parts carry model output today; reasoning / tool /
+ * file parts are intentionally skipped so the transcript stays focused on the
+ * answer Derrick's visitors actually see.
+ */
+function textFromParts(message: UIMessage): string {
+  return message.parts
+    .filter((p): p is Extract<typeof p, { type: "text" }> => p.type === "text")
+    .map((p) => p.text)
+    .join("");
 }
 
 const SUGGESTIONS = [
@@ -42,7 +53,8 @@ export default function ChatArea(props: ChatAreaProps) {
   } = props;
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  const isEmpty = messages.filter((m) => m.role !== "system").length === 0;
+  const turns = messages.filter((m) => m.role !== "system");
+  const isEmpty = turns.length === 0;
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -79,11 +91,14 @@ export default function ChatArea(props: ChatAreaProps) {
             <Greeting onPick={(s) => onChangeInput(s)} />
           ) : (
             <div className="pt-6 pb-8 space-y-6">
-              {messages
-                .filter((m) => m.role !== "system")
-                .map((m) => (
-                  <Message key={m.id} role={m.role} content={m.content} isStreaming={isStreaming && m.id === messages[messages.length - 1]?.id} />
-                ))}
+              {turns.map((m) => (
+                <Message
+                  key={m.id}
+                  role={m.role}
+                  content={textFromParts(m)}
+                  isStreaming={isStreaming && m.id === turns[turns.length - 1]?.id}
+                />
+              ))}
             </div>
           )}
         </div>
