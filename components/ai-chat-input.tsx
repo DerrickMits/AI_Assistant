@@ -2,10 +2,8 @@
 
 import * as React from "react";
 import { useState, useEffect, useRef } from "react";
-import { Lightbulb, Mic, Globe, Paperclip, Send, Square, Plus, ChevronDown, Sparkles } from "lucide-react";
+import { Mic, Paperclip, Send, Square, Sparkles } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { cn } from "@/lib/utils";
-import type { ModelId } from "@/lib/site";
 
 /**
  * Animated AI chat input (HextaUI-inspired) re-tokened to Derrick's brand:
@@ -33,10 +31,6 @@ interface AIChatInputProps {
   onSubmit: () => void;
   onStop: () => void;
   isStreaming: boolean;
-  model: ModelId;
-  onPickModel: (m: ModelId) => void;
-  modelMenuOpen: boolean;
-  onToggleModelMenu: () => void;
 }
 
 const AIChatInput = ({
@@ -45,16 +39,10 @@ const AIChatInput = ({
   onSubmit,
   onStop,
   isStreaming,
-  model,
-  onPickModel,
-  modelMenuOpen,
-  onToggleModelMenu,
 }: AIChatInputProps) => {
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [showPlaceholder, setShowPlaceholder] = useState(true);
   const [isActive, setIsActive] = useState(false);
-  const [thinkActive, setThinkActive] = useState(false);
-  const [deepSearchActive, setDeepSearchActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -232,14 +220,6 @@ const AIChatInput = ({
               <Mic size={20} />
             </button>
 
-            {/* Model selector (Flash / Pro) — brand-consistent pill */}
-            <ModelSelector
-              model={model}
-              onPick={onPickModel}
-              open={modelMenuOpen}
-              onToggle={onToggleModelMenu}
-            />
-
             {/* Send / Stop */}
             {isStreaming ? (
               <button
@@ -269,7 +249,7 @@ const AIChatInput = ({
 
           {/* ---------- Expanded Controls ---------- */}
           <motion.div
-            className="w-full flex justify-between px-4 items-center text-sm"
+            className="w-full flex justify-end px-4 items-center text-sm"
             variants={{
               hidden: {
                 opacity: 0,
@@ -288,62 +268,6 @@ const AIChatInput = ({
             animate={expanded ? "visible" : "hidden"}
             style={{ marginTop: 8 }}
           >
-            <div className="flex gap-3 items-center">
-              {/* Think Toggle */}
-              <button
-                className={cn(
-                  "flex items-center gap-1 px-4 py-2 rounded-full transition-all font-medium group",
-                  thinkActive
-                    ? "bg-[#e8c98f]/15 outline outline-[#e8c98f]/60 text-[#1C1917]"
-                    : "bg-warm-100 text-warm-600 hover:bg-warm-200",
-                )}
-                title="Think"
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setThinkActive((a) => !a);
-                }}
-              >
-                <Lightbulb
-                  className={cn("transition-all", thinkActive && "fill-[#e8c98f]")}
-                  size={18}
-                />
-                Think
-              </button>
-
-              {/* Deep Search Toggle */}
-              <motion.button
-                className={cn(
-                  "flex items-center px-4 gap-1 py-2 rounded-full transition font-medium whitespace-nowrap overflow-hidden justify-start",
-                  deepSearchActive
-                    ? "bg-[#e8c98f]/15 outline outline-[#e8c98f]/60 text-[#1C1917]"
-                    : "bg-warm-100 text-warm-600 hover:bg-warm-200",
-                )}
-                title="Deep Search"
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setDeepSearchActive((a) => !a);
-                }}
-                initial={false}
-                animate={{
-                  width: deepSearchActive ? 132 : 40,
-                  paddingLeft: deepSearchActive ? 12 : 12,
-                }}
-              >
-                <div className="flex-1">
-                  <Globe size={18} />
-                </div>
-                <motion.span
-                  className="pb-[2px]"
-                  initial={false}
-                  animate={{ opacity: deepSearchActive ? 1 : 0 }}
-                >
-                  Deep Search
-                </motion.span>
-              </motion.button>
-            </div>
-
             {/* Right-side brand hint */}
             <div className="flex items-center gap-1.5 text-[11px] text-warm-400 select-none">
               <Sparkles size={12} className="text-[#e8c98f]" />
@@ -359,57 +283,5 @@ const AIChatInput = ({
     </div>
   );
 };
-
-/* ----------------------------------------------------------------------
-   Model selector (Flash / Pro) preserved from the prior InputBar so the
-   chat's model switcher stays inside the new premium input surface.
----------------------------------------------------------------------- */
-function ModelSelector({
-  model,
-  onPick,
-  open,
-  onToggle,
-}: {
-  model: ModelId;
-  onPick: (m: ModelId) => void;
-  open: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <div className="relative shrink-0">
-      <button
-        onClick={(e) => { e.stopPropagation(); onToggle(); }}
-        className="inline-flex items-center gap-1 h-9 px-2.5 rounded-full text-[13px] text-warm-600 hover:bg-warm-100 transition-colors"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        type="button"
-      >
-        {model === "pro" ? "Pro" : "Flash"}
-        <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", open && "rotate-180")} />
-      </button>
-      {open && (
-        <div className="absolute right-0 bottom-11 w-48 rounded-xl border border-warm-200 bg-white shadow-xl p-1 z-30">
-          {[
-            { id: "flash" as const, label: "Gemini 2.5 Flash", hint: "Fast, efficient" },
-            { id: "pro" as const, label: "Gemini 2.5 Pro", hint: "Strongest reasoning" },
-          ].map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onPick(m.id); onToggle(); }}
-              className={cn(
-                "w-full flex flex-col items-start px-2.5 py-2 rounded-lg text-left hover:bg-warm-100 transition-colors",
-                model === m.id && "bg-warm-100",
-              )}
-            >
-              <span className="text-[13px] text-warm-900">{m.label}</span>
-              <span className="text-[11px] text-warm-400">{m.hint}</span>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 export { AIChatInput };

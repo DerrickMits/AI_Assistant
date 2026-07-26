@@ -1,24 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import {
   PanelLeftClose,
-  PanelLeftOpen,
   SquarePen,
-  Search,
-  ImageIcon,
-  VideoIcon,
-  Library,
-  Plus,
   Pin,
   PinOff,
-  Settings,
   Trash2,
   MessageSquare,
 } from "lucide-react";
-import { GeminiStar } from "@/components/icons";
 import { cn } from "@/lib/utils";
-import { SITE } from "@/lib/site";
 
 interface SidebarProps {
   open: boolean;
@@ -35,8 +25,6 @@ interface SidebarProps {
 export default function Sidebar({
   open, onToggle, pinned, recents, activeId, onNewChat, onSelect, onTogglePin, onDelete,
 }: SidebarProps) {
-  const [settingsOpen, setSettingsOpen] = useState(false);
-
   return (
     <aside
       className={cn(
@@ -46,11 +34,7 @@ export default function Sidebar({
     >
       <div className="w-[280px] h-full flex flex-col">
         {/* ---------- Top bar ---------- */}
-        <div className="flex items-center justify-between px-3 h-14 shrink-0">
-          <div className="flex items-center gap-2 pl-1">
-            <GeminiStar className="w-6 h-6" />
-            <span className="wordmark text-[18px] font-medium tracking-tight">Gemini</span>
-          </div>
+        <div className="flex items-center px-3 h-14 shrink-0">
           <button
             onClick={onToggle}
             aria-label="Collapse sidebar"
@@ -69,43 +53,10 @@ export default function Sidebar({
             <SquarePen className="w-5 h-5 text-[#c9c9d1]" />
             <span className="font-medium">New chat</span>
           </button>
-          <button className="flex items-center gap-3 w-full h-12 pl-3 pr-3 rounded-2xl text-[14px] text-[#c9c9d1] hover:bg-white/5 transition-colors">
-            <Search className="w-5 h-5" />
-            <span>Search chats</span>
-            <kbd className="ml-auto text-[11px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-[#9a9aa3]">
-              &#8984;K
-            </kbd>
-          </button>
         </div>
-
-        {/* ---------- Nav: Images / Videos / Library ---------- */}
-        <nav className="px-3 pt-2 pb-1 space-y-0.5">
-          {[
-            { icon: ImageIcon, label: "Images" },
-            { icon: VideoIcon, label: "Videos" },
-            { icon: Library, label: "Library" },
-          ].map(({ icon: Icon, label }) => (
-            <button
-              key={label}
-              className="flex items-center gap-3 w-full h-10 pl-3 pr-3 rounded-xl text-[14px] text-[#c9c9d1] hover:bg-white/5 transition-colors"
-            >
-              <Icon className="w-5 h-5" />
-              <span>{label}</span>
-            </button>
-          ))}
-        </nav>
 
         {/* ---------- Scrollable sections ---------- */}
         <div className="flex-1 overflow-y-auto px-3 pt-3 pb-2">
-          {/* Notebooks */}
-          <Section label="Notebooks">
-            <button className="flex items-center gap-2 w-full h-9 pl-2 pr-2 rounded-lg text-[13px] text-[#9ea0a6] hover:bg-white/5 transition-colors">
-              <Plus className="w-4 h-4" />
-              <span>New notebook</span>
-            </button>
-            <div className="px-2 py-2 text-[12px] text-[#6f6f78]">No pinned notebooks yet.</div>
-          </Section>
-
           {/* Pinned chats */}
           {pinned.length > 0 && (
             <Section label="Pinned">
@@ -143,40 +94,6 @@ export default function Sidebar({
               ))
             )}
           </Section>
-        </div>
-
-        {/* ---------- Bottom profile bar ---------- */}
-        <div className="border-t border-[#1c1c20] px-3 py-3 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#e8c98f] to-[#c8b6ff] grid place-items-center text-[13px] font-semibold text-[#0f0f11]">
-                DO
-              </div>
-              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#4ade80] border-2 border-[#0f0f11]" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[13px] font-medium text-[#e8e8ee] truncate">{SITE.name}</span>
-                <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#e8c98f]/15 text-[#e8c98f] border border-[#e8c98f]/25">
-                  Pro
-                </span>
-              </div>
-              <div className="text-[11px] text-[#7c7d85] truncate">Executive Operations</div>
-            </div>
-            <button
-              onClick={() => setSettingsOpen((v) => !v)}
-              aria-label="Settings"
-              className="ml-auto w-9 h-9 grid place-items-center rounded-full text-[#c9c9d1] hover:bg-white/5 transition-colors"
-            >
-              <Settings className="w-5 h-5" />
-            </button>
-          </div>
-          {settingsOpen && (
-            <div className="mt-3 p-3 rounded-xl bg-[#18181b] border border-[#2a2a2e] text-[12px] text-[#a0a0aa] space-y-1.5">
-              <p>Assistant grounded on Derrick's portfolio, The Ledger articles, and Resources Hub blueprints.</p>
-              <p className="text-[#7c7d85]">Repo: <a className="text-[#e8c98f] underline" href={SITE.githubRepo} target="_blank" rel="noreferrer">{SITE.githubRepo.replace("https://", "")}</a></p>
-            </div>
-          )}
         </div>
       </div>
     </aside>

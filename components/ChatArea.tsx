@@ -6,7 +6,6 @@ import MarkdownContent from "@/components/MarkdownContent";
 import { AIChatInput as InputBar } from "@/components/ai-chat-input";
 import { GeminiStar } from "@/components/icons";
 import { cn } from "@/lib/utils";
-import type { ModelId } from "@/lib/site";
 
 interface ChatMessageLike {
   id: string;
@@ -21,10 +20,6 @@ interface ChatAreaProps {
   onChangeInput: (v: string) => void;
   onSubmit: () => void;
   onStop: () => void;
-  model: ModelId;
-  onPickModel: (m: ModelId) => void;
-  modelMenuOpen: boolean;
-  onToggleModelMenu: () => void;
   onOpenSidebar: () => void;
   sidebarOpen: boolean;
 }
@@ -43,8 +38,7 @@ const SUGGESTIONS = [
 
 export default function ChatArea(props: ChatAreaProps) {
   const {
-    messages, isStreaming, inputValue, onChangeInput, onSubmit, onStop,
-    model, onPickModel, modelMenuOpen, onToggleModelMenu, onOpenSidebar, sidebarOpen,
+    messages, isStreaming, inputValue, onChangeInput, onSubmit, onStop, onOpenSidebar, sidebarOpen,
   } = props;
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -102,10 +96,6 @@ export default function ChatArea(props: ChatAreaProps) {
           onSubmit={onSubmit}
           onStop={onStop}
           isStreaming={isStreaming}
-          model={model}
-          onPickModel={onPickModel}
-          modelMenuOpen={modelMenuOpen}
-          onToggleModelMenu={onToggleModelMenu}
         />
       </div>
     </div>
