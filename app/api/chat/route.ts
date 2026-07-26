@@ -1,4 +1,4 @@
-import { streamText, createUIMessageStream, createUIMessageStreamResponse } from "ai";
+import { streamText } from "ai";
 import { resolveChat } from "@/lib/ai";
 import { DEFAULT_MODEL, type ModelId } from "@/lib/site";
 import { CORS_ORIGINS } from "@/lib/site";
@@ -73,15 +73,15 @@ export async function POST(req: Request) {
     const note =
       "I could not reach Derrick's live knowledge sources from this deployment, so I have no articles, blueprints, or profile data to ground on. Please ensure the sibling repositories are present (local) or reachable at the deployed URLs (production), or contact Derrick to wire them up.";
     const result = streamText({ model: aiModel!, system, prompt: note });
-    return result.toUIMessageStreamResponse({
+    return result.toTextStreamResponse({
       headers: corsHeaders(allowOrigin),
     });
   }
 
   // Graceful fallback when no API key is configured so the UI still streams a
   // coherent operator-facing answer plus the retrieved entries. We emit a
-  // v5 UI-message data stream by hand (no model is available), so `useChat`
-  // parses it into the assistant's `UIMessage.parts` as normal.
+  // plain-text stream so the client-side `useChat` (configured with
+  // `streamProtocol: "text"`) parses it into `UIMessage.parts` as normal.
   if (!hasKey || !aiModel) {
     const fallback =
       "I'm Derrick's AI Assistant, but the GEMINI_API_KEY environment variable is not set on this deployment, so I cannot reach the model yet.\n\n" +
@@ -93,7 +93,20 @@ export async function POST(req: Request) {
             .map((sc) => `- ${sc.kind}: ${sc.id} (relevance ${sc.score})`)
             .join("\n"));
 
-    return uiMessageTextResponse(fallback, corsHeaders(allowOrigin));
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(encoder.encode(fallback));
+        controller.close();
+      },
+    });
+    return new Response(stream, {
+      status: 200,
+      headers: {
+        "content-type": "text/plain; charset=utf-8",
+        ...corsHeaders(allowOrigin),
+      },
+    });
   }
 
   const turnMessages = messages
@@ -107,40 +120,10 @@ export async function POST(req: Request) {
     temperature: 0.4,
   });
 
-  // NOTE: do NOT set `content-type` / `x-vercel-ai-content-type` here.
-  // `toUIMessageStreamResponse` emits the v5 UI-message data-stream protocol and
-  // sets the right headers itself. Overriding `content-type: text/plain` makes
-  // the client `useChat` (default `streamProtocol: "data"`) treat the body as a
-  // plain text stream and never populate the assistant `UIMessage.parts`, so
-  // the reply shows empty / "Thinking..." forever.
-  return result.toUIMessageStreamResponse({
+  // `toTextStreamResponse` emits the response as a plain-text event stream. The
+  // client `useChat` (configured with `streamProtocol: "text"`) reads the stream
+  // and builds `UIMessage.parts` from it for rendering in the chat UI.
+  return result.toTextStreamResponse({
     headers: corsHeaders(allowOrigin),
-  });
-}
-
-/**
- * Emit a single text turn on the v5 UI-message data-stream protocol without a
- * live model. This keeps the no-key fallback rendering correctly on the client
- * (`useChat` parses the stream into `UIMessage.parts`).
- */
-function uiMessageTextResponse(text: string, headers: Record<string, string>): Response {
-  const stream = createUIMessageStream({
-    execute: ({ writer }) => {
-      const id = "fallback-text";
-      writer.write({ type: "start" });
-      writer.write({ type: "start-step" });
-      writer.write({ type: "text-start", id });
-      // v5 UI-message stream: `text-delta` carries `delta`, not `text`.
-      writer.write({ type: "text-delta", id, delta: text });
-      writer.write({ type: "text-end", id });
-      writer.write({ type: "finish-step" });
-      writer.write({ type: "finish" });
-    },
-  });
-
-  return createUIMessageStreamResponse({
-    status: 200,
-    headers,
-    stream,
   });
 }

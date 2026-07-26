@@ -18,6 +18,7 @@ export default function ChatShell() {
   const ai = useChat({
     api: "/api/chat",
     id: store.activeId ?? "default",
+    streamProtocol: "text",
     body: { model: DEFAULT_MODEL },
     initialMessages: activeMessages.map((m) => ({ id: m.id, role: m.role, content: m.content })),
     onFinish: (m) => {
