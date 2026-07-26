@@ -1,10 +1,71 @@
-import { streamText } from "ai";
+import { generateText, type LanguageModel } from "ai";
 import { resolveChat } from "@/lib/ai";
+import { pickModel } from "@/lib/ai";
 import { DEFAULT_MODEL, type ModelId } from "@/lib/site";
 import { CORS_ORIGINS } from "@/lib/site";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+/**
+ * Models to try in order when the primary one is rate-limited. Gemini's
+ * Hobbyscale (free-tier) quotas often exhaust after a handful of requests
+ * per minute; rotating across models keeps the assistant answering every
+ * prompt instead of going silent mid-conversation.
+ */
+const MODEL_CHAIN: ModelId[] = ["flash", "pro", "flash"];
+
+/**
+ * Run generateText with retry-on-rate-limit across the model chain.
+ * On any error that looks like a quota / rate-limit failure, we back off
+ * and try the next model. After exhausting the chain we throw the last
+ * error so the caller can surface a useful message to the operator.
+ */
+async function generateWithRetry(
+  baseModel: LanguageModel,
+  opts: {
+    system: string;
+    messages?: { role: "user" | "assistant" | "system"; content: string }[];
+    prompt?: string;
+    temperature?: number;
+  },
+  { retries = 3, baseDelayMs = 800 }: { retries?: number; baseDelayMs?: number } = {},
+): Promise<string> {
+  let lastError: unknown = null;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const model =
+      attempt === 0 ? baseModel : pickModel(MODEL_CHAIN[attempt % MODEL_CHAIN.length]);
+    try {
+      const text = opts.prompt
+        ? (
+            await generateText({
+              model,
+              system: opts.system,
+              prompt: opts.prompt,
+              temperature: opts.temperature ?? 0.4,
+            })
+          ).text
+        : (
+            await generateText({
+              model,
+              system: opts.system,
+              messages: opts.messages ?? [],
+              temperature: opts.temperature ?? 0.4,
+            })
+          ).text;
+      return text;
+    } catch (err: unknown) {
+      lastError = err;
+      const msg = err instanceof Error ? err.message : String(err);
+      const isRateLimit = /429|quota|rate.?limit|resource.?exhausted/i.test(msg);
+      if (!isRateLimit) throw err;
+      if (attempt < retries) {
+        await new Promise((r) => setTimeout(r, baseDelayMs * 2 ** attempt));
+      }
+    }
+  }
+  throw lastError;
+}
 
 interface IncomingMessage {
   role: "user" | "assistant" | "system";
@@ -72,16 +133,26 @@ export async function POST(req: Request) {
   if (!retrieval.articles.length && !retrieval.resources.length && !system.includes("Derrick")) {
     const note =
       "I could not reach Derrick's live knowledge sources from this deployment, so I have no articles, blueprints, or profile data to ground on. Please ensure the sibling repositories are present (local) or reachable at the deployed URLs (production), or contact Derrick to wire them up.";
-    const result = streamText({ model: aiModel!, system, prompt: note });
-    return result.toTextStreamResponse({
-      headers: corsHeaders(allowOrigin),
-    });
+    try {
+      const text = await generateWithRetry(aiModel!, {
+        system,
+        prompt: note,
+      });
+      return new Response(text, {
+        status: 200,
+        headers: { "content-type": "text/plain; charset=utf-8", ...corsHeaders(allowOrigin) },
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      return new Response(message, {
+        status: 500,
+        headers: { "content-type": "text/plain; charset=utf-8", ...corsHeaders(allowOrigin) },
+      });
+    }
   }
 
-  // Graceful fallback when no API key is configured so the UI still streams a
-  // coherent operator-facing answer plus the retrieved entries. We emit a
-  // plain-text stream so the client-side `useChat` (configured with
-  // `streamProtocol: "text"`) parses it into `UIMessage.parts` as normal.
+  // Graceful fallback when no API key is configured so the UI still returns a
+  // coherent operator-facing answer plus the retrieved entries.
   if (!hasKey || !aiModel) {
     const fallback =
       "I'm Derrick's AI Assistant, but the GEMINI_API_KEY environment variable is not set on this deployment, so I cannot reach the model yet.\n\n" +
@@ -93,37 +164,35 @@ export async function POST(req: Request) {
             .map((sc) => `- ${sc.kind}: ${sc.id} (relevance ${sc.score})`)
             .join("\n"));
 
-    const encoder = new TextEncoder();
-    const stream = new ReadableStream<Uint8Array>({
-      start(controller) {
-        controller.enqueue(encoder.encode(fallback));
-        controller.close();
-      },
-    });
-    return new Response(stream, {
+    return new Response(fallback, {
       status: 200,
-      headers: {
-        "content-type": "text/plain; charset=utf-8",
-        ...corsHeaders(allowOrigin),
-      },
+      headers: { "content-type": "text/plain; charset=utf-8", ...corsHeaders(allowOrigin) },
     });
   }
 
   const turnMessages = messages
-    .filter((m) => m.role !== "system")
+    .filter((m): m is IncomingMessage & { role: "user" | "assistant" } =>
+      m.role === "user" || m.role === "assistant")
     .map((m) => ({ role: m.role, content: m.content }));
 
-  const result = streamText({
-    model: aiModel,
-    system,
-    messages: turnMessages,
-    temperature: 0.4,
-  });
+  try {
+    const text = await generateWithRetry(aiModel, {
+      system,
+      messages: turnMessages,
+      temperature: 0.4,
+    });
 
-  // `toTextStreamResponse` emits the response as a plain-text event stream. The
-  // client `useChat` (configured with `streamProtocol: "text"`) reads the stream
-  // and builds `UIMessage.parts` from it for rendering in the chat UI.
-  return result.toTextStreamResponse({
-    headers: corsHeaders(allowOrigin),
-  });
+    return new Response(text, {
+      status: 200,
+      headers: { "content-type": "text/plain; charset=utf-8", ...corsHeaders(allowOrigin) },
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error
+      ? `Model error: ${err.message}`
+      : "An unexpected error occurred while calling the model. Please try again.";
+    return new Response(message, {
+      status: 500,
+      headers: { "content-type": "text/plain; charset=utf-8", ...corsHeaders(allowOrigin) },
+    });
+  }
 }
