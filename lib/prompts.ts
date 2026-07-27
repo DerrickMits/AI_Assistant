@@ -1,4 +1,4 @@
-import type { KnowledgeBase, KBArticle, KBResource } from "@/lib/knowledge";
+import type { KnowledgeBase, KBArticle, KBResource, KBTestimonial } from "@/lib/knowledge";
 import { SITE } from "@/lib/site";
 
 /**
@@ -10,6 +10,7 @@ import { SITE } from "@/lib/site";
 export function buildSystemPrompt(context: {
   articles: KBArticle[];
   resources: KBResource[];
+  testimonials: KBTestimonial[];
   profile: import("@/lib/knowledge").KBProfile | null;
 }): string {
   const profile = context.profile;
@@ -65,6 +66,20 @@ ${highlights}`;
           })
           .join("\n");
 
+  const testimonialsBlock =
+    context.testimonials.length === 0
+      ? "(No specific peer recommendation context matched this query.)\\n\\n"
+      : context.testimonials
+          .map((t) => {
+            const quote = t.quote.length > 1500 ? t.quote.slice(0, 1500) + "\n[...truncated]" : t.quote;
+            return `## Peer Recommendation: ${t.name}
+Designation: ${t.designation}
+Photo: ${t.src}
+Quote:
+${quote}`;
+          })
+          .join("\n\n");
+
   return `# **Role:**
 You are the official AI Collaborator and Operational Assistant representing Derrick Odiwuor, an Executive Operations Coordinator, MBA candidate, and automation specialist.
 
@@ -84,6 +99,9 @@ ${articlesBlock}
 # Selected blueprints grounded for this query:
 ${resourcesBlock}
 
+# Selected peer recommendations grounded for this query:
+${testimonialsBlock}
+
 ---
 
 # **Instructions:**
@@ -98,6 +116,9 @@ When answering based on a specific article or blueprint, include direct Markdown
 
 ## **Instruction 3: Brand Voice and Tone**
 Maintain Derrick's established brand voice: warm, executive, highly structured, articulate, educational, and professional.
+
+## **Instruction 4: Peer Recommendations Honesty**
+You can summarize or paraphrase the peer recommendations listed in the context block above, but do NOT invent additional testimonials, names, or quotes. If the user asks about peer recommendations and the context block is empty for the current query, say honestly that you do not have that information on hand rather than producing fake endorsements.
 
 # **Notes:**
 - Avoid hyphens in prose text where possible (prefer spaces, such as "fast paced" instead of "fast-paced").

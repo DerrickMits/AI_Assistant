@@ -27,7 +27,7 @@ const ARTICLES_URL = `${ARTICLES_SITE}/articles`;
 const RESOURCES_SITE = "https://resources-virid-nine.vercel.app";
 const RESOURCES_URL = `${RESOURCES_SITE}/resources`;
 const PORTFOLIO_URL =
-  "https://portfoliosite-kk69f8ey6-derrickmits-projects.vercel.app/";
+  "https://portfoliosite-pearl-one.vercel.app/";
 const LINKEDIN = "https://linkedin.com/in/derrickodiwuor";
 const EMAIL = "derrickodiwuor@gmail.com";
 
@@ -368,6 +368,93 @@ function buildResources(): KBResource[] {
   return resources;
 }
 
+interface KBTestimonial {
+  name: string;
+  designation: string;
+  quote: string;
+  src: string;
+  sourceFile: string;
+}
+
+function buildTestimonials(): KBTestimonial[] {
+  const recPath = path.join(PORTFOLIO, "components", "RecommendationsSection.tsx");
+  if (!fs.existsSync(recPath)) return [];
+  const source = read(recPath);
+
+  const startIdx = source.indexOf("const testimonials");
+  if (startIdx === -1) return [];
+  const eq = source.indexOf("=", startIdx);
+  if (eq === -1) return [];
+  const bracket = source.indexOf("[", eq);
+  if (bracket === -1) return [];
+
+  let depth = 0;
+  let end = bracket;
+  let inStr: string | null = null;
+  for (let i = bracket; i < source.length; i++) {
+    const ch = source[i];
+    const prev = i > 0 ? source[i - 1] : "";
+    if (inStr) {
+      if (ch === inStr && prev !== "\\") inStr = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === "`") { inStr = ch; continue; }
+    if (ch === "[") depth++;
+    else if (ch === "]") {
+      depth--;
+      if (depth === 0) { end = i; break; }
+    }
+  }
+  const block = source.slice(bracket, end + 1);
+
+  const objects: string[] = [];
+  let objDepth = 0;
+  let buf = "";
+  let s: string | null = null;
+  for (let i = 0; i < block.length; i++) {
+    const ch = block[i];
+    const prev = block[i - 1];
+    if (s) {
+      buf += ch;
+      if (ch === s && prev !== "\\") s = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === "`") { s = ch; buf += ch; continue; }
+    if (ch === "{") {
+      if (objDepth === 0) buf = "{";
+      else buf += ch;
+      objDepth++;
+      continue;
+    }
+    if (ch === "}") {
+      objDepth--;
+      buf += ch;
+      if (objDepth === 0) { objects.push(buf); buf = ""; }
+      continue;
+    }
+    if (objDepth > 0) buf += ch;
+  }
+
+  const out: KBTestimonial[] = [];
+  for (const obj of objects) {
+    const str = (key: string): string => {
+      const m = obj.match(new RegExp(`${key}:\\s*"?\\n?\\s*"((?:[^"\\\\]|\\\\.)*)"`, "m"));
+      return m ? JSON.parse('"' + m[1] + '"') : "";
+    };
+    const name = str("name");
+    const quote = str("quote");
+    if (!name || !quote) continue;
+    out.push({
+      name,
+      designation: str("designation"),
+      quote,
+      src: str("src"),
+      sourceFile: path.relative(ZFOLDER, recPath),
+    });
+  }
+  return out;
+}
+
 async function main() {
   console.log("\n  AI Assistant \u2014 knowledge base ingestion\n  -----------------------------------------");
   console.log("  Source dirs:");
@@ -378,11 +465,13 @@ async function main() {
   const profile = buildProfile();
   const articles = buildArticles();
   const resources = buildResources();
+  const testimonials = buildTestimonials();
 
   const kb = {
     profile,
     articles,
     resources,
+    testimonials,
     sites: {
       portfolio: PORTFOLIO_URL,
       ledger: ARTICLES_URL,
@@ -394,6 +483,7 @@ async function main() {
         experiences: profile.experiences.length,
         articles: articles.length,
         resources: resources.length,
+        testimonials: testimonials.length,
       },
     },
   };
@@ -407,6 +497,7 @@ async function main() {
   console.log("    profile     :", `name=${profile.name}, experiences=${profile.experiences.length}, certs=${profile.certifications.length}`);
   console.log("    articles    :", articles.length, "files");
   console.log("    resources   :", resources.length, "entries");
+  console.log("    testimonials:", testimonials.length, "entries");
   console.log("\n  written ->", path.relative(ROOT, outPath), "\n");
 }
 

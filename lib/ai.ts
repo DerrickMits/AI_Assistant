@@ -1,5 +1,5 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { loadKnowledgeBase, type KBArticle, type KBResource, type KnowledgeBase } from "@/lib/knowledge";
+import { loadKnowledgeBase, type KBArticle, type KBResource, type KBTestimonial, type KnowledgeBase } from "@/lib/knowledge";
 import { buildSystemPrompt } from "@/lib/prompts";
 import { type ModelId } from "@/lib/site";
 import { SITE } from "@/lib/site";
@@ -32,6 +32,7 @@ function overlap(queryTokens: string[], doc: string): number {
 export interface RetrievalResult {
   articles: KBArticle[];
   resources: KBResource[];
+  testimonials: KBTestimonial[];
   scores: { kind: string; id: string; score: number }[];
 }
 
@@ -42,16 +43,18 @@ export interface RetrievalResult {
 export function selectContext(
   query: string,
   kb: KnowledgeBase,
-  opts: { articleK?: number; resourceK?: number } = {},
+  opts: { articleK?: number; resourceK?: number; testimonialK?: number } = {},
 ): RetrievalResult {
   const articleK = opts.articleK ?? 6;
   const resourceK = opts.resourceK ?? 4;
+  const testimonialK = opts.testimonialK ?? 2;
   const queryTokens = tokenize(query);
 
   if (queryTokens.length === 0) {
     return {
       articles: kb.articles.slice(0, articleK),
       resources: kb.resources.slice(0, resourceK),
+      testimonials: kb.testimonials.slice(0, testimonialK),
       scores: [],
     };
   }
@@ -74,10 +77,20 @@ export function selectContext(
     .sort((a, b) => b.score - a.score)
     .slice(0, resourceK);
 
+  const scoredTestimonials = kb.testimonials
+    .map((t) => {
+      const doc = [t.name, t.designation, t.quote].join(" | ");
+      return { kind: "testimonial", id: t.name, score: overlap(queryTokens, doc), entry: t };
+    })
+    .filter((s) => s.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, testimonialK);
+
   return {
     articles: scoredArticles.map((s) => s.entry),
     resources: scoredResources.map((s) => s.entry),
-    scores: [...scoredArticles, ...scoredResources].map((s) => ({ kind: s.kind, id: s.id, score: s.score })),
+    testimonials: scoredTestimonials.map((s) => s.entry),
+    scores: [...scoredArticles, ...scoredResources, ...scoredTestimonials].map((s) => ({ kind: s.kind, id: s.id, score: s.score })),
   };
 }
 
@@ -114,6 +127,7 @@ export function resolveChat(req: ChatRequest): ResolvedChat {
   const system = buildSystemPrompt({
     articles: retrieval.articles,
     resources: retrieval.resources,
+    testimonials: retrieval.testimonials,
     profile: kb.profile,
   });
   const hasKey = Boolean(process.env.GEMINI_API_KEY);
