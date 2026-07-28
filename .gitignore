@@ -30,6 +30,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# Build-time sibling clone created by `npm run prebuild` (ingest-at-build.ts).
+# Never ship or commit it; cleaned up at the end of the build step.
+/.kb-sources/
+
 # typescript
 *.tsbuildinfo
 

@@ -5,10 +5,12 @@
   "description": "Interactive operational assistant and knowledge engine for Derrick Odiwuor.",
   "scripts": {
     "dev": "next dev",
+    "prebuild": "tsx scripts/ingest-at-build.ts",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "kb": "tsx scripts/build-knowledge.ts",
+    "ingest:build": "tsx scripts/ingest-at-build.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -34,6 +36,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.11",
+    "pdfjs-dist": "^5.4.149",
     "tailwindcss": "^4",
     "tsx": "^4.19.0",
     "typescript": "^5"

@@ -1,5 +1,5 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { loadKnowledgeBase, type KBArticle, type KBResource, type KBTestimonial, type KnowledgeBase } from "@/lib/knowledge";
+import { loadKnowledgeBase, type KBArticle, type KBResource, type KBTestimonial, type KBPortfolioPage, type KnowledgeBase } from "@/lib/knowledge";
 import { buildSystemPrompt } from "@/lib/prompts";
 import { type ModelId } from "@/lib/site";
 import { SITE } from "@/lib/site";
@@ -33,6 +33,7 @@ export interface RetrievalResult {
   articles: KBArticle[];
   resources: KBResource[];
   testimonials: KBTestimonial[];
+  portfolioPages: KBPortfolioPage[];
   scores: { kind: string; id: string; score: number }[];
 }
 
@@ -43,18 +44,21 @@ export interface RetrievalResult {
 export function selectContext(
   query: string,
   kb: KnowledgeBase,
-  opts: { articleK?: number; resourceK?: number; testimonialK?: number } = {},
+  opts: { articleK?: number; resourceK?: number; testimonialK?: number; pageK?: number } = {},
 ): RetrievalResult {
   const articleK = opts.articleK ?? 6;
   const resourceK = opts.resourceK ?? 4;
   const testimonialK = opts.testimonialK ?? 2;
+  const pageK = opts.pageK ?? 4;
   const queryTokens = tokenize(query);
+  const portfolioPages = kb.portfolioPages ?? [];
 
   if (queryTokens.length === 0) {
     return {
       articles: kb.articles.slice(0, articleK),
       resources: kb.resources.slice(0, resourceK),
       testimonials: kb.testimonials.slice(0, testimonialK),
+      portfolioPages: portfolioPages.slice(0, pageK),
       scores: [],
     };
   }
@@ -68,9 +72,11 @@ export function selectContext(
     .sort((a, b) => b.score - a.score)
     .slice(0, articleK);
 
+  // Resources now include the extracted blueprint PDF text + presenting page
+  // (resource.body) so questions about a blueprint's actual contents surface it.
   const scoredResources = kb.resources
     .map((r) => {
-      const doc = [r.title, r.category, r.tags.join(" "), r.description, r.highlights.map((h) => `${h.label} ${h.detail}`).join(" ")].join(" | ");
+      const doc = [r.title, r.category, r.tags.join(" "), r.description, r.highlights.map((h) => `${h.label} ${h.detail}`).join(" "), r.body ?? ""].join(" | ");
       return { kind: "resource", id: r.id, score: overlap(queryTokens, doc), entry: r };
     })
     .filter((s) => s.score > 0)
@@ -86,11 +92,23 @@ export function selectContext(
     .sort((a, b) => b.score - a.score)
     .slice(0, testimonialK);
 
+  // Portfolio section pages — let the assistant answer "what's on Derrick's
+  // portfolio site about X" by matching the captured section text blobs.
+  const scoredPages = portfolioPages
+    .map((p) => {
+      const doc = [p.section, p.title, p.textBlob].join(" | ");
+      return { kind: "page", id: p.sourceFile, score: overlap(queryTokens, doc), entry: p };
+    })
+    .filter((s) => s.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, pageK);
+
   return {
     articles: scoredArticles.map((s) => s.entry),
     resources: scoredResources.map((s) => s.entry),
     testimonials: scoredTestimonials.map((s) => s.entry),
-    scores: [...scoredArticles, ...scoredResources, ...scoredTestimonials].map((s) => ({ kind: s.kind, id: s.id, score: s.score })),
+    portfolioPages: scoredPages.map((s) => s.entry),
+    scores: [...scoredArticles, ...scoredResources, ...scoredTestimonials, ...scoredPages].map((s) => ({ kind: s.kind, id: s.id, score: s.score })),
   };
 }
 
@@ -128,6 +146,7 @@ export function resolveChat(req: ChatRequest): ResolvedChat {
     articles: retrieval.articles,
     resources: retrieval.resources,
     testimonials: retrieval.testimonials,
+    portfolioPages: retrieval.portfolioPages,
     profile: kb.profile,
   });
   const hasKey = Boolean(process.env.GEMINI_API_KEY);

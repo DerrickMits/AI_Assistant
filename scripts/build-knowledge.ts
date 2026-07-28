@@ -3,21 +3,34 @@
  *
  * Reads Derrick's three live sibling repositories inside ZFolder and produces
  * /data/knowledgeBase.json, the single committed context snapshot the AI
- * assistant reranks against at query time.
+ * assistant reranks against at query time. Also extracts:
+ *   - the body text of each downloadable blueprint PDF
+ *   - the blueprint-presenting page text (resources listing + card template)
+ *   - the text of every section of the main portfolio site (all components)
  *
  * Sources (spec name -> actual local directory):
  *   portfoliosite      -> ../portfolio
  *   ledger_article_site-> ../articles
  *   resources          -> ../resources
  *
- * Run: `npm run kb`
+ * Sources live wherever `KB_SOURCES` points (default `..`, i.e. ZFolder).
+ * The Vercel build step (scripts/ingest-at-build.ts) clones the siblings into
+ * a temp dir and points `KB_SOURCES` at it before invoking this script.
+ *
+ * Run: `npm run kb` (local, reads `..`) or via the build step.
  */
 import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
 
+import { extractPdfText } from "./lib/pdf";
+import { buildPortfolioPages as buildPortfolioPagesLib } from "./lib/portfolio-pages";
+import { buildResourcesPageText } from "./lib/resources-page";
+
 const ROOT = process.cwd();
-const ZFOLDER = path.resolve(ROOT, "..");
+// KB_SOURCES lets the Vercel build step point this script at a freshly cloned
+// sibling checkout instead of the dev `..` directory. Default = ZFolder.
+const ZFOLDER = path.resolve(process.env.KB_SOURCES ?? path.join(ROOT, ".."));
 const PORTFOLIO = path.join(ZFOLDER, "portfolio");
 const ARTICLES = path.join(ZFOLDER, "articles");
 const RESOURCES = path.join(ZFOLDER, "resources");
@@ -271,13 +284,14 @@ interface KBResource {
   date?: string;
   url: string;
   downloadUrl: string;
+  /** Extracted PDF body + blueprint-presenting page text. */
+  body?: string;
 }
 
 function buildResources(): KBResource[] {
   const tsPath = path.join(RESOURCES, "lib", "resources.ts");
   if (!fs.existsSync(tsPath)) return [];
   const source = read(tsPath);
-
   // Parse the `export const resources: ResourceAsset[] = [ ... ]` block.
   const start = source.indexOf("export const resources");
   const eq = source.indexOf("=", start);
@@ -455,8 +469,35 @@ function buildTestimonials(): KBTestimonial[] {
   return out;
 }
 
+interface PortfolioPage {
+  section: string;
+  sourceFile: string;
+  title: string;
+  url: string;
+  textBlob: string;
+}
+
+async function attachBlueprintBodies(resources: KBResource[]): Promise<number> {
+  // Per blueprint: extracted PDF text + the presenting-page copy, attached to
+  // each resource so the assistant can answer questions about the contents and
+  // the page hosting the download. Tolerant — a missing/unparseable PDF or
+  // missing presenting page just leaves body empty.
+  const { listingText } = buildResourcesPageText({ resourcesDir: RESOURCES, url: RESOURCES_URL });
+  let bytes = 0;
+  for (const r of resources) {
+    if (!r.filename) continue;
+    const abs = path.join(RESOURCES, "public", "blueprints", r.filename);
+    const pdfText = await extractPdfText(abs);
+    const pagePart = listingText ? `--- Presenting page ---\n${listingText}` : "";
+    const parts = [pdfText, pagePart].filter(Boolean);
+    r.body = parts.join("\n\n").trim();
+    bytes += r.body.length;
+  }
+  return bytes;
+}
+
 async function main() {
-  console.log("\n  AI Assistant \u2014 knowledge base ingestion\n  -----------------------------------------");
+  console.log("\n  AI Assistant - knowledge base ingestion\n  -----------------------------------------");
   console.log("  Source dirs:");
   console.log("    portfolio :", path.relative(ZFOLDER, PORTFOLIO));
   console.log("    articles  :", path.relative(ZFOLDER, ARTICLES));
@@ -467,11 +508,19 @@ async function main() {
   const resources = buildResources();
   const testimonials = buildTestimonials();
 
+  const blueprintBytes = await attachBlueprintBodies(resources);
+
+  // Main portfolio site sections - one entry per section component.
+  const portfolioPages: PortfolioPage[] = fs.existsSync(PORTFOLIO)
+    ? buildPortfolioPagesLib(PORTFOLIO, PORTFOLIO_URL)
+    : [];
+
   const kb = {
     profile,
     articles,
     resources,
     testimonials,
+    portfolioPages,
     sites: {
       portfolio: PORTFOLIO_URL,
       ledger: ARTICLES_URL,
@@ -484,6 +533,8 @@ async function main() {
         articles: articles.length,
         resources: resources.length,
         testimonials: testimonials.length,
+        portfolioPages: portfolioPages.length,
+        blueprintBytes,
       },
     },
   };
@@ -494,10 +545,11 @@ async function main() {
   fs.writeFileSync(outPath, JSON.stringify(kb, null, 2), "utf8");
 
   console.log("\n  Ingested:");
-  console.log("    profile     :", `name=${profile.name}, experiences=${profile.experiences.length}, certs=${profile.certifications.length}`);
-  console.log("    articles    :", articles.length, "files");
-  console.log("    resources   :", resources.length, "entries");
-  console.log("    testimonials:", testimonials.length, "entries");
+  console.log("    profile        :", `name=${profile.name}, experiences=${profile.experiences.length}, certs=${profile.certifications.length}`);
+  console.log("    articles       :", articles.length, "files");
+  console.log("    resources      :", `${resources.length} entries, blueprint text=${blueprintBytes} chars`);
+  console.log("    testimonials   :", testimonials.length, "entries");
+  console.log("    portfolioPages :", portfolioPages.length, "sections");
   console.log("\n  written ->", path.relative(ROOT, outPath), "\n");
 }
 

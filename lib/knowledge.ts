@@ -94,6 +94,26 @@ export interface KBResource {
   date?: string;
   url: string;
   downloadUrl: string;
+  /**
+   * Extracted textual content of the downloadable file (PDF body, JSON/MD
+   * payload) plus the blueprint-presenting page, concatenated. Captured at
+   * build time by `scripts/build-knowledge.ts` so the assistant can answer
+   * questions about the contents, not just the title/description. Optional so
+   * live snapshots lacking it still parse cleanly.
+   */
+  body?: string;
+}
+
+export interface KBPortfolioPage {
+  section: string;
+  /** Component source path relative to the portfolio repo (e.g. components/HeroSection.tsx). */
+  sourceFile: string;
+  /** Best-effort title (from a leading heading or the section/component name). */
+  title: string;
+  /** Live URL of the portfolio section (the portfolio is a single-page site today, so this is the home URL for every section). */
+  url: string;
+  /** Plain-text blob extracted from the section component's JSX literals. */
+  textBlob: string;
 }
 export interface KBTestimonial {
   name: string;
@@ -107,6 +127,8 @@ export interface KnowledgeBase {
   articles: KBArticle[];
   resources: KBResource[];
   testimonials: KBTestimonial[];
+  /** Captured text of the main portfolio site's section pages (hero, experience, skills, projects, blog, contact, footer, etc.). */
+  portfolioPages: KBPortfolioPage[];
   sites: {
     portfolio: string;
     ledger: string;
@@ -116,6 +138,15 @@ export interface KnowledgeBase {
     generatedAt: string;
     available: boolean;
     missingSources: string[];
+    /** Optional mirror of script-side counts when the snapshot was built. */
+    sourceCounts?: {
+      experiences?: number;
+      articles?: number;
+      resources?: number;
+      testimonials?: number;
+      portfolioPages?: number;
+      blueprintBytes?: number;
+    };
   };
 }
 
@@ -456,6 +487,119 @@ function buildTestimonials(portfolioDir: string): KBTestimonial[] {
   return out;
 }
 
+/* ----- portfolio section pages ----- */
+
+/**
+ * Pull every double-quoted and backtick string literal out of a TSX source
+ * blob in source order. Good enough for capturing section copy (headings,
+ * bullets, labels) so the assistant can answer questions about anything
+ * visible on the main portfolio site without needing a headless browser.
+ */
+function extractTextLiterals(source: string): string[] {
+  const out: string[] = [];
+  let i = 0;
+  while (i < source.length) {
+    const ch = source[i];
+    if (ch === '"' || ch === "`") {
+      // capture until matching quote, honoring \-escapes
+      let j = i + 1;
+      let buf = "";
+      while (j < source.length) {
+        const c = source[j];
+        if (c === "\\" && j + 1 < source.length) { buf += source[j + 1]; j += 2; continue; }
+        if (c === ch) break;
+        buf += c;
+        j++;
+      }
+      if (buf.trim()) out.push(buf);
+      i = j + 1;
+      continue;
+    }
+    if (ch === "'") {
+      // skip single-quoted char/string — rare in JSX text; just advance past it
+      let j = i + 1;
+      while (j < source.length && source[j] !== "'") {
+        if (source[j] === "\\") j++;
+        j++;
+      }
+      i = j + 1;
+      continue;
+    }
+    i++;
+  }
+  return out;
+}
+
+function sectionNameFromFile(relPath: string): string {
+  const base = relPath.split("/").pop()?.replace(/\.tsx$/, "") ?? "section";
+  return base.replace(/Section$/, "").replace(/([a-z])([A-Z])/g, "$1 $2");
+}
+
+function titleFromLiterals(literals: string[]): string {
+  // Prefer the first short literal that looks like a heading (no trailing
+  // punctuation, <= 80 chars, not a URL/email/path).
+  for (const s of literals.slice(0, 12)) {
+    const t = s.trim();
+    if (!t) continue;
+    if (t.length > 80) continue;
+    if (/https?:\/\//.test(t) || t.includes("@") || t.includes("/")) continue;
+    if (/[.!?]/.test(t.slice(-1))) continue;
+    return t;
+  }
+  return "";
+}
+
+function buildPortfolioPages(portfolioDir: string, portfolioUrl: string): KBPortfolioPage[] {
+  const componentsDir = path.join(portfolioDir, "components");
+  if (!fs.existsSync(componentsDir)) return [];
+
+  const files = fs.readdirSync(componentsDir).filter((f) => f.endsWith(".tsx"));
+  const pages: KBPortfolioPage[] = [];
+  for (const file of files) {
+    // Skip the assistant embedding widgets — their text isn't portfolio copy.
+    if (/AIAssistant/i.test(file)) continue;
+    const abs = path.join(componentsDir, file);
+    const source = readText(abs);
+    if (!source) continue;
+    const allLiterals = extractTextLiterals(source).map((s) => s.trim()).filter(Boolean);
+    if (allLiterals.length === 0) continue;
+    const proseLiterals = allLiterals.filter(looksLikeProse);
+    // Skip sections whose captured text is almost entirely JSX/Tailwind. The
+    // bar: at least 5 prose strings OR >= 40% prose ratio. Mirrors the build
+    // script's threshold so local dev and the committed snapshot agree.
+    const ratio = proseLiterals.length / allLiterals.length;
+    if (proseLiterals.length < 5 && ratio < 0.4) continue;
+    const rel = `components/${file}`;
+    const section = sectionNameFromFile(rel);
+    const title = titleFromLiterals(proseLiterals) || section;
+    const textBlob = proseLiterals.join("\n").trim();
+    if (!textBlob) continue;
+    pages.push({ section, sourceFile: rel, title, url: portfolioUrl, textBlob });
+  }
+  return pages;
+}
+
+/**
+ * Decide whether a captured string literal is real prose vs a JSX attribute
+ * (Tailwind classnames, class names, imports). Mirrors the helper in
+ * `scripts/lib/portfolio-pages.ts` so the live reader and the committed
+ * snapshot produce identical shapes.
+ */
+function looksLikeProse(s: string): boolean {
+  const t = s.trim();
+  if (!t) return false;
+  if (!/\s/.test(t)) return false;
+  if (/\$\{/.test(t)) return false;
+  if (t.length > 0 && /^[a-z]+$/.test(t.replace(/\s+/g, ""))) return false;
+  const tokens = t.split(/\s+/);
+  const tailwindTokens = (t.match(/\b(?:flex|grid|block|inline|relative|absolute|fixed|w-\d+|h-\d+|p-\d+|m-\d+|text-(?:xs|sm|base|lg|xl|\d+xl)|font-(?:bold|semibold|medium)|bg-\S+|border-\S+|hover:\S+|md:\S+|sm:\S+|lg:\S+|dark:\S+|transition-\S+|gap-\d+|space-\S+|rounded-\S+|shadow-\S+|leading-\S+|tracking-\S+|max-w-\S+|min-w-\S+|mx-\S+|my-\S+|px-\S+|py-\S+|mt-\d+|mb-\d+|mr-\d+|ml-\d+|pt-\d+|pb-\d+|pr-\d+|pl-\d+|z-\d+|opacity-\S+|duration-\d+|ease-\S+|group\b|first:|last:|focus:|active:|placeholder)\b/g) || []).length;
+  const nonTailwindTokens = tokens.filter((tok) => !/^(?:flex|grid|block|inline|relative|absolute|fixed|w-\d+|h-\d+|p-\d+|m-\d+|text-(?:xs|sm|base|lg|xl|\d+xl)|font-(?:bold|semibold|medium)|bg-\S+|border-\S+|hover:\S+|md:\S+|sm:\S+|lg:\S+|dark:\S+|transition-\S+|gap-\d+|space-\S+|rounded-\S+|shadow-\S+|leading-\S+|tracking-\S+|max-w-\S+|min-w-\S+|mx-\S+|my-\S+|px-\S+|py-\S+|mt-\d+|mb-\d+|mr-\d+|ml-\d+|pt-\d+|pb-\d+|pr-\d+|pl-\d+|z-\d+|opacity-\S+|duration-\d+|ease-\S+|group\b|first:|last:|focus:|active:|placeholder\S*)$/.test(tok)).length;
+  if (tailwindTokens >= 2 && tailwindTokens > nonTailwindTokens) return false;
+  if (/^(fixed|relative|absolute|inline|block|grid|flex|hover|transition|overflow|transform|group|cursor|rounded|shadow|border|bg-|text-|font-|max-w|min-w|z-\d)/.test(t)) return false;
+  if (/^(use client|"use client")/.test(t)) return false;
+  return true;
+}
+
 /* ----- orchestrator ----- */
 
 let cache: { kb: KnowledgeBase; at: number } | null = null;
@@ -488,6 +632,7 @@ export function loadKnowledgeBase(): KnowledgeBase {
   const articles = articlesDir ? buildArticles(articlesDir, sites.ledger) : [];
   const resources = resourcesDir ? buildResources(resourcesDir, sites.resources) : [];
   const testimonials = portfolioDir ? buildTestimonials(portfolioDir) : [];
+  const portfolioPages = portfolioDir ? buildPortfolioPages(portfolioDir, sites.portfolio) : [];
 
   // Snapshot fallback: when live sibling dirs are unreachable (typical for
   // serverless deploys like Vercel), supplement whatever the live loader
@@ -495,7 +640,11 @@ export function loadKnowledgeBase(): KnowledgeBase {
   // what lets the deployed chat answer correctly without bundling the
   // sibling repositories. The snapshot is regenerated by `npm run kb`.
   const liveHadAnyData =
-    Boolean(profile) || articles.length > 0 || resources.length > 0 || testimonials.length > 0;
+    Boolean(profile) ||
+    articles.length > 0 ||
+    resources.length > 0 ||
+    testimonials.length > 0 ||
+    portfolioPages.length > 0;
   const snapshot = !liveHadAnyData ? loadSnapshot() : null;
   const available = liveHadAnyData
     ? missingSources.length === 0
@@ -504,11 +653,19 @@ export function loadKnowledgeBase(): KnowledgeBase {
   const kb: KnowledgeBase = snapshot
     ? {
         ...snapshot,
+        // Ensure forward & backward compat for fields added after the
+        // snapshot was committed.
+        portfolioPages: snapshot.portfolioPages ?? [],
+        resources: (snapshot.resources ?? []).map((r) => ({
+          ...r,
+          body: r.body ?? "",
+        })),
         sites,
         meta: {
           generatedAt: snapshot.meta?.generatedAt ?? new Date().toISOString(),
           available,
           missingSources: snapshot.meta?.missingSources ?? ["portfolio", "articles", "resources"],
+          ...(snapshot.meta?.sourceCounts ? { sourceCounts: snapshot.meta.sourceCounts } : {}),
         },
       }
     : {
@@ -516,6 +673,7 @@ export function loadKnowledgeBase(): KnowledgeBase {
         articles,
         resources,
         testimonials,
+        portfolioPages,
         sites,
         meta: {
           generatedAt: new Date().toISOString(),
