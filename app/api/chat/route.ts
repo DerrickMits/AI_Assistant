@@ -130,7 +130,12 @@ export async function POST(req: Request) {
   // When no knowledge is reachable on disk AND the live-fetch fallback also
   // returned nothing (e.g. a cold deploy with no network to the sibling
   // sites), be honest about it rather than hallucinate.
-  if (!retrieval.articles.length && !retrieval.resources.length && !system.includes("Derrick")) {
+  if (
+    !retrieval.articles.length &&
+    !retrieval.resources.length &&
+    !retrieval.portfolioPages.length &&
+    !system.includes("Derrick")
+  ) {
     const note =
       "I could not reach Derrick's live knowledge sources from this deployment, so I have no articles, blueprints, or profile data to ground on. Please ensure the sibling repositories are present (local) or reachable at the deployed URLs (production), or contact Derrick to wire them up.";
     try {

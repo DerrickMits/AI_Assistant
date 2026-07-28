@@ -1,4 +1,4 @@
-import type { KnowledgeBase, KBArticle, KBResource, KBTestimonial } from "@/lib/knowledge";
+import type { KnowledgeBase, KBArticle, KBResource, KBTestimonial, KBPortfolioPage } from "@/lib/knowledge";
 import { SITE } from "@/lib/site";
 
 /**
@@ -11,6 +11,7 @@ export function buildSystemPrompt(context: {
   articles: KBArticle[];
   resources: KBResource[];
   testimonials: KBTestimonial[];
+  portfolioPages: KBPortfolioPage[];
   profile: import("@/lib/knowledge").KBProfile | null;
 }): string {
   const profile = context.profile;
@@ -54,6 +55,11 @@ ${body}
             const highlights = r.highlights
               .map((h) => `- ${h.label}: ${h.detail}`)
               .join("\n");
+            // Include an excerpt of the extracted blueprint file body so the
+            // assistant can describe the actual contents, not only the title.
+            const body = r.body ? r.body.trim() : "";
+            const bodyExcerpt = body.length > 3000 ? body.slice(0, 3000) + "\n[...truncated]" : body;
+            const bodyBlock = bodyExcerpt ? `\nExtracted blueprint content:\n${bodyExcerpt}` : "";
             return `## Blueprint: ${r.title}
 Category: ${r.category} | Format: ${r.format}
 ID: ${r.id}
@@ -62,9 +68,24 @@ Download: ${r.downloadUrl}
 Tags: ${r.tags.join(", ")}
 Description: ${r.description}
 Highlights:
-${highlights}`;
+${highlights}${bodyBlock}`;
           })
           .join("\n");
+
+  const pagesBlock =
+    context.portfolioPages.length === 0
+      ? "(No specific portfolio section context matched this query.)\\n"
+      : context.portfolioPages
+          .map((p) => {
+            const text = p.textBlob.length > 3000 ? p.textBlob.slice(0, 3000) + "\n[...truncated]" : p.textBlob;
+            return `## Portfolio Section: ${p.title}
+Section: ${p.section}
+Source: ${p.sourceFile}
+Live URL: ${p.url}
+Section copy:
+${text}`;
+          })
+          .join("\n\n");
 
   const testimonialsBlock =
     context.testimonials.length === 0
@@ -98,6 +119,9 @@ ${articlesBlock}
 
 # Selected blueprints grounded for this query:
 ${resourcesBlock}
+
+# Selected portfolio sections grounded for this query:
+${pagesBlock}
 
 # Selected peer recommendations grounded for this query:
 ${testimonialsBlock}
