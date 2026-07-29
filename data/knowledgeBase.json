@@ -806,6 +806,13 @@
   ],
   "portfolioPages": [
     {
+      "section": "Certifications",
+      "sourceFile": "components/CertificationsSection.tsx",
+      "title": "Salesforce Certified Platform Administrator",
+      "url": "https://portfoliosite-pearl-one.vercel.app/",
+      "textBlob": "Salesforce Certified Platform Administrator\nGoHighLevel Certified Admin\nSalesforce Certified Platform Foundations\nVerified Credentials\nCertifications & Badges\nView credential\nw-full h-full object-contain"
+    },
+    {
       "section": "Contact",
       "sourceFile": "components/ContactSection.tsx",
       "title": "+254 713 965 539",
@@ -861,13 +868,13 @@
     "resources": "https://resources-virid-nine.vercel.app/resources"
   },
   "meta": {
-    "generatedAt": "2026-07-28T21:38:08.057Z",
+    "generatedAt": "2026-07-29T17:04:03.079Z",
     "sourceCounts": {
       "experiences": 6,
       "articles": 13,
       "resources": 13,
       "testimonials": 3,
-      "portfolioPages": 7,
+      "portfolioPages": 8,
       "blueprintBytes": 269708
     }
   }
