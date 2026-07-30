@@ -867,7 +867,7 @@
       "sourceFile": "components/Navbar.tsx",
       "title": "AI Assistant",
       "url": "https://portfoliosite-pearl-one.vercel.app/",
-      "textBlob": "AI Assistant\nhidden md:flex items-center gap-1\nw-3.5 h-3.5\nToggle theme\nToggle menu"
+      "textBlob": "AI Assistant\nLong-form writing on the portfolio site itself\nExternal publication - The Ledger\nDownloadable blueprints and playbooks\nhidden md:flex items-center gap-1\nw-3.5 h-3.5\nToggle theme\nToggle menu"
     },
     {
       "section": "Projects",
@@ -897,7 +897,7 @@
     "resources": "https://resources-virid-nine.vercel.app/resources"
   },
   "meta": {
-    "generatedAt": "2026-07-30T13:09:50.678Z",
+    "generatedAt": "2026-07-30T14:03:09.267Z",
     "sourceCounts": {
       "experiences": 6,
       "articles": 15,
