@@ -863,13 +863,6 @@
       "textBlob": "Executive Focus Time\nRecovered through calendar realignment\nCampaign ROI\nData Analytics & Visualization\nReduction in Receivables\nOutstanding receivables decreased\nOn-Time Delivery\nCross-functional project workstreams\nDerrick Odiwuor, Executive Operations Coordinator\n(max-width: 1024px) 288px, 384px\nobject-cover object-center\nDerrick Odiwuor\nobject-cover object-center w-full h-full"
     },
     {
-      "section": "Navbar",
-      "sourceFile": "components/Navbar.tsx",
-      "title": "AI Assistant",
-      "url": "https://portfoliosite-pearl-one.vercel.app/",
-      "textBlob": "AI Assistant\nLong-form writing on the portfolio site itself\nExternal publication - The Ledger\nDownloadable blueprints and playbooks\nhidden md:flex items-center gap-1\nw-3.5 h-3.5\nToggle theme\nToggle menu"
-    },
-    {
       "section": "Projects",
       "sourceFile": "components/ProjectsSection.tsx",
       "title": "Executive Calendar & Workflow Automation Pipeline",
@@ -897,13 +890,13 @@
     "resources": "https://resources-virid-nine.vercel.app/resources"
   },
   "meta": {
-    "generatedAt": "2026-07-30T14:03:09.267Z",
+    "generatedAt": "2026-07-30T15:52:17.740Z",
     "sourceCounts": {
       "experiences": 6,
       "articles": 15,
       "resources": 13,
       "testimonials": 3,
-      "portfolioPages": 9,
+      "portfolioPages": 8,
       "blueprintBytes": 269708
     }
   }
