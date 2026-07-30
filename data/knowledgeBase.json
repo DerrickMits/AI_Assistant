@@ -817,6 +817,13 @@
   ],
   "portfolioPages": [
     {
+      "section": "Beyond Work",
+      "sourceFile": "components/BeyondWorkSection.tsx",
+      "title": "Off the Clock",
+      "url": "https://portfoliosite-pearl-one.vercel.app/",
+      "textBlob": "Off the Clock\nBeyond Work\nA few moments outside the dashboard. Paintballing with the crew, team building offsites, and conversations that started as networking and became something more.\nPaintballing with the team\nTeam building offsite\nTeam Building\nNetworking event"
+    },
+    {
       "section": "Certifications",
       "sourceFile": "components/CertificationsSection.tsx",
       "title": "Salesforce Certified Platform Administrator",
@@ -879,13 +886,13 @@
     "resources": "https://resources-virid-nine.vercel.app/resources"
   },
   "meta": {
-    "generatedAt": "2026-07-29T22:25:04.318Z",
+    "generatedAt": "2026-07-30T00:27:37.327Z",
     "sourceCounts": {
       "experiences": 6,
       "articles": 14,
       "resources": 13,
       "testimonials": 3,
-      "portfolioPages": 8,
+      "portfolioPages": 9,
       "blueprintBytes": 269708
     }
   }
