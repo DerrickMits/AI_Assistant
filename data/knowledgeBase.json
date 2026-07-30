@@ -821,7 +821,7 @@
       "sourceFile": "components/BeyondWorkSection.tsx",
       "title": "Off the Clock",
       "url": "https://portfoliosite-pearl-one.vercel.app/",
-      "textBlob": "Off the Clock\nBeyond Work\nA few moments outside the dashboard. Paintballing with the crew, team building offsites, and conversations that started as networking and became something more.\nPaintballing with the team\nTeam building offsite\nTeam Building\nNetworking event"
+      "textBlob": "Off the Clock\nBeyond Work\nA few moments outside the dashboard. Paintballing with the crew, team building offsites, and conversations that started as networking and became something more. Drag the top card to see the next.\nTeam Building\nPaintballing with the team\nTeam building offsite\nNetworking event conversation"
     },
     {
       "section": "Certifications",
@@ -886,7 +886,7 @@
     "resources": "https://resources-virid-nine.vercel.app/resources"
   },
   "meta": {
-    "generatedAt": "2026-07-30T00:27:37.327Z",
+    "generatedAt": "2026-07-30T01:47:20.846Z",
     "sourceCounts": {
       "experiences": 6,
       "articles": 14,
