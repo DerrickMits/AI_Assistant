@@ -4,6 +4,7 @@ import * as React from "react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Mic, Paperclip, Send, Square, Sparkles, X, FileText, Mic2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import { cn } from "@/lib/utils";
 
 /**
  * Animated AI chat input (HextaUI-inspired) re-tokened to Derrick's brand:
@@ -226,7 +227,7 @@ const AIChatInput = ({
     <div className="w-full max-w-3xl mx-auto">
       <motion.div
         ref={wrapperRef}
-        className="w-full"
+        className={cn("w-full", isStreaming && "thinking-glow")}
         variants={containerVariants}
         animate={expanded ? "expanded" : "collapsed"}
         initial="collapsed"

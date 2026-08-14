@@ -6,6 +6,7 @@ import type { UIMessage } from "@ai-sdk/ui-utils";
 import MarkdownContent from "@/components/MarkdownContent";
 import { AIChatInput as InputBar, AttachedFile } from "@/components/ai-chat-input";
 import { GeminiStar } from "@/components/icons";
+import { ThinkingAnimation } from "@/components/ThinkingAnimation";
 import { cn } from "@/lib/utils";
 
 interface ChatAreaProps {
@@ -192,10 +193,12 @@ function Message({ role, content, isStreaming }: { role: string; content: string
           <div className="text-left">
             {content ? (
               <MarkdownContent content={content} />
+            ) : isStreaming ? (
+              <ThinkingAnimation />
             ) : (
               <span className="text-[#9a9aa3] text-[14px]">Thinking...</span>
             )}
-            {isStreaming && <span className="caret-blink" />}
+            {isStreaming && content && <span className="caret-blink" />}
           </div>
         )}
       </div>
