@@ -136,7 +136,7 @@ function Greeting({ onPick }: { onPick: (s: string) => void }) {
     <div className="min-h-[60vh] flex flex-col items-center justify-center text-center animate-fade-up">
       <div className="relative mb-8">
         <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-[#d8d8d8] shadow-2xl shadow-[#e8c98f]/20">
-          <img src="/elara-avatar.svg" alt="Elara" className="w-full h-full object-cover" />
+          <img src="/elara-avatar.png" alt="Elara" className="w-full h-full object-cover" />
         </div>
         <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[#f8f6f0] border-2 border-[#d8d8d8] grid place-items-center">
           <span className="text-[10px] font-bold text-[#e8c98f]">E</span>
@@ -181,7 +181,7 @@ function Message({ role, content, isStreaming }: { role: string; content: string
         {isUser ? (
           "U"
         ) : (
-          <img src="/elara-avatar.svg" alt="Elara" className="w-full h-full object-cover" />
+          <img src="/elara-avatar.png" alt="Elara" className="w-full h-full object-cover" />
         )}
       </div>
       <div className={cn("min-w-0 max-w-full", isUser ? "text-right" : "")}>

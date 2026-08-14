@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 export function GeminiStar({ className }: { className?: string }) {
   return (
     <img
-      src="/elara-avatar.svg"
+      src="/elara-avatar.png"
       alt="Elara"
       className={cn("inline-block rounded-full object-cover", className)}
       width={24}

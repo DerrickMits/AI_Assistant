@@ -11,7 +11,7 @@ export function ThinkingAnimation({ className }: { className?: string }) {
       <div className="relative shrink-0">
         <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-[#2a2a2e]">
           <img
-            src="/elara-avatar.svg"
+            src="/elara-avatar.png"
             alt="Elara"
             className="w-full h-full object-cover"
           />
