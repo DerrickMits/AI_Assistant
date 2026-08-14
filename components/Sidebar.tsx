@@ -125,7 +125,7 @@ function ChatRow({
         "group flex items-center gap-2 w-full h-9 pl-2 pr-1 rounded-xl text-[13px] transition-colors cursor-pointer",
         active ? "bg-gradient-to-r from-[#e8c98f] to-[#f3d9b3] text-[#1a1a1a]" : "text-[#1a1a1a] hover:bg-gradient-to-r from-[#e8c98f] to-[#f3d9b3]",
       )}
-      onClick={select}
+      onClick={onSelect}
     >
       <MessageSquare className="w-4 h-4 shrink-0 opacity-70" />
       <span className="truncate flex-1">{title}</span>
