@@ -127,6 +127,39 @@ export async function POST(req: Request) {
   const model: ModelId = body.model === "pro" ? "pro" : DEFAULT_MODEL;
   const { system, model: aiModel, hasKey, retrieval } = resolveChat({ messages, model });
 
+  // Elara name-call detection: if the user calls her by name with a short
+  // greeting / standalone mention, respond with a creative "What can I do for
+  // you?" before diving into normal processing. This keeps the interaction
+  // feeling personal without burning a model call for trivial greetings.
+  const ELARA_GREETINGS = [
+    "What can I do for you?",
+    "How can I assist you today?",
+    "At your service — what do you need?",
+    "I'm here. What shall we tackle?",
+    "Ready when you are. What's on your mind?",
+    "Name's Elara. What can I help you with?",
+    "You called? I'm all ears.",
+    "Here and ready — what's the task?",
+    "What's on your mind?",
+    "How may I be of service?",
+  ];
+  const lastUserMsg = messages.filter((m) => m.role === "user").pop();
+  const lastUserContent = lastUserMsg?.content?.trim().toLowerCase() ?? "";
+  const isNameCall =
+    /^elara$/.test(lastUserContent) ||
+    /^(hey|hi|hello|yo|sup)\s+elara$/.test(lastUserContent) ||
+    /^elara[,!]\s/.test(lastUserContent) ||
+    /^(hey|hi|hello|yo|sup)\s+elara[,!]?\s/.test(lastUserContent);
+  const prevAssistantCount = messages.filter((m) => m.role === "assistant").length;
+
+  if (isNameCall && prevAssistantCount === 0) {
+    const greeting = ELARA_GREETINGS[Math.floor(Math.random() * ELARA_GREETINGS.length)];
+    return new Response(greeting, {
+      status: 200,
+      headers: { "content-type": "text/plain; charset=utf-8", ...corsHeaders(allowOrigin) },
+    });
+  }
+
   // When no knowledge is reachable on disk AND the live-fetch fallback also
   // returned nothing (e.g. a cold deploy with no network to the sibling
   // sites), be honest about it rather than hallucinate.

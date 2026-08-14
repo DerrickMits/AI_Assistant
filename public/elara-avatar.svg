@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1a1a1f"/>
+      <stop offset="100%" stop-color="#0C0A09"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e8c98f"/>
+      <stop offset="50%" stop-color="#d4a850"/>
+      <stop offset="100%" stop-color="#c49640"/>
+    </linearGradient>
+    <linearGradient id="skin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8B5E3C"/>
+      <stop offset="100%" stop-color="#6B4226"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#e8c98f" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#e8c98f" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="98" fill="url(#bg)" stroke="url(#gold)" stroke-width="2.5"/>
+
+  <!-- Glow effect -->
+  <circle cx="100" cy="85" r="65" fill="url(#glow)"/>
+
+  <!-- Face -->
+  <ellipse cx="100" cy="82" rx="38" ry="44" fill="url(#skin)"/>
+
+  <!-- Hair base -->
+  <path d="M42,80 C42,35 65,15 100,15 C135,15 158,35 158,80 C158,95 155,110 150,125 L145,130 C145,130 148,90 145,70 C142,50 130,30 100,25 C70,20 50,40 45,70 C42,85 42,80 42,80Z" fill="#1a0a00" opacity="0.95"/>
+
+  <!-- Braids left -->
+  <path d="M55,60 C45,90 40,130 50,165" stroke="#1a0a00" stroke-width="8" fill="none" stroke-linecap="round" opacity="0.9"/>
+  <path d="M60,55 C52,85 48,120 55,155" stroke="#1a0a00" stroke-width="7" fill="none" stroke-linecap="round" opacity="0.85"/>
+
+  <!-- Braids right -->
+  <path d="M145,60 C155,90 160,130 150,165" stroke="#1a0a00" stroke-width="8" fill="none" stroke-linecap="round" opacity="0.9"/>
+  <path d="M140,55 C148,85 152,120 145,155" stroke="#1a0a00" stroke-width="7" fill="none" stroke-linecap="round" opacity="0.85"/>
+
+  <!-- Hair top volume -->
+  <path d="M55,65 C55,30 75,10 100,10 C125,10 145,30 145,65 C145,80 140,90 135,95 C130,75 115,55 100,55 C85,55 70,75 65,95 C60,90 55,80 55,65Z" fill="#1a0a00"/>
+
+  <!-- Eyes -->
+  <ellipse cx="83" cy="75" rx="8" ry="9" fill="white"/>
+  <ellipse cx="117" cy="75" rx="8" ry="9" fill="white"/>
+  <circle cx="84" cy="75" r="5.5" fill="#2a1810"/>
+  <circle cx="118" cy="75" r="5.5" fill="#2a1810"/>
+  <circle cx="84" cy="75" r="3" fill="#0a0505"/>
+  <circle cx="118" cy="75" r="3" fill="#0a0505"/>
+  <circle cx="86" cy="73" r="1.5" fill="white" opacity="0.7"/>
+  <circle cx="120" cy="73" r="1.5" fill="white" opacity="0.7"/>
+
+  <!-- Eyebrows -->
+  <path d="M72,62 C78,59 88,58 93,61" stroke="#1a0a00" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M107,61 C112,58 122,59 128,62" stroke="#1a0a00" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+  <!-- Nose -->
+  <path d="M100,80 C97,88 95,93 98,95 L102,95 C105,93 103,88 100,80Z" fill="#6B4226" opacity="0.6"/>
+
+  <!-- Lips -->
+  <path d="M88,102 C93,98 107,98 112,102 C107,107 93,107 88,102Z" fill="#c47a6a"/>
+  <path d="M90,102 C95,104 105,104 110,102" stroke="#a05a4a" stroke-width="1" fill="none"/>
+
+  <!-- Smile -->
+  <path d="M88,103 C93,107 107,107 112,103" stroke="white" stroke-width="1" fill="none" opacity="0.4" stroke-linecap="round"/>
+
+  <!-- Gold hoop earrings -->
+  <circle cx="62" cy="90" r="9" fill="none" stroke="url(#gold)" stroke-width="2.5"/>
+  <circle cx="62" cy="90" r="9" fill="url(#gold)" opacity="0.15"/>
+  <circle cx="138" cy="90" r="9" fill="none" stroke="url(#gold)" stroke-width="2.5"/>
+  <circle cx="138" cy="90" r="9" fill="url(#gold)" opacity="0.15"/>
+
+  <!-- Gold necklace -->
+  <path d="M80,130 C85,140 100,148 115,140 C120,130 118,125 115,122" stroke="url(#gold)" stroke-width="2" fill="none"/>
+  <circle cx="100" cy="148" r="8" fill="url(#gold)" opacity="0.4"/>
+  <circle cx="100" cy="148" r="8" fill="none" stroke="url(#gold)" stroke-width="1.5"/>
+  <circle cx="100" cy="148" r="2" fill="url(#gold)"/>
+
+  <!-- Blazer lapels (subtle) -->
+  <path d="M65,125 L85,155 L100,148 L115,155 L135,125" fill="#c4a0a0" opacity="0.3"/>
+  <path d="M100,140 L100,148" stroke="#d4a0a0" stroke-width="1" opacity="0.3"/>
+
+  <!-- Sparkle accents -->
+  <g opacity="0.6">
+    <path d="M30,40 L32,45 L37,47 L32,49 L30,54 L28,49 L23,47 L28,45Z" fill="url(#gold)" opacity="0.5"/>
+    <path d="M170,35 L171,38 L174,39 L171,40 L170,43 L169,40 L166,39 L169,38Z" fill="url(#gold)" opacity="0.4"/>
+    <path d="M155,55 L156.5,58.5 L160,60 L156.5,61.5 L155,65 L153.5,61.5 L150,60 L153.5,58.5Z" fill="url(#gold)" opacity="0.3"/>
+  </g>
+
+  <!-- "E" monogram at bottom -->
+  <text x="100" y="185" text-anchor="middle" font-family="Georgia, serif" font-size="22" font-weight="bold" fill="url(#gold)" opacity="0.7">E</text>
+</svg>

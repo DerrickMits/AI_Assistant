@@ -133,19 +133,29 @@ export default function ChatArea(props: ChatAreaProps) {
 function Greeting({ onPick }: { onPick: (s: string) => void }) {
   return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center text-center animate-fade-up">
-      <GeminiStar className="w-14 h-14 mb-6 sparkle-pulse rounded-full" />
-      <h1 className="text-[34px] sm:text-[40px] font-medium tracking-tight text-[#e8e8ee]">
-        Hi Derrick, what's the move?
+      <div className="relative mb-8">
+        <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-[#3a3a40] shadow-2xl shadow-[#e8c98f]/20">
+          <img src="/elara-avatar.svg" alt="Elara" className="w-full h-full object-cover" />
+        </div>
+        <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[#1a1a1f] border-2 border-[#3a3a40] grid place-items-center">
+          <span className="text-[10px] font-bold text-[#e8c98f]">E</span>
+        </div>
+      </div>
+      <h1 className="text-[34px] sm:text-[40px] font-medium tracking-tight text-[#e8e8ee] mb-2">
+        Meet <span className="text-[#e8c98f]">Elara</span>
       </h1>
-      <p className="mt-3 text-[14px] text-[#9a9aa3]">
-        Ask about your career, your articles on The Ledger, or your blueprints.
+      <p className="mt-2 text-[15px] text-[#9a9aa3] mb-1">
+        Derrick's AI collaborator & operational assistant
+      </p>
+      <p className="text-[13px] text-[#7a7a85] max-w-md">
+        Ask me anything about Derrick's career, his articles on The Ledger, or his downloadable blueprints.
       </p>
       <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-xl">
         {SUGGESTIONS.map((s) => (
           <button
             key={s}
             onClick={() => onPick(s)}
-            className="text-left text-[13px] px-4 py-3 rounded-2xl border border-[#2a2a2e] bg-[#111118]/70 text-[#c9c9d1] hover:border-[#3a3a40] hover:bg-[#18181b] transition-colors"
+            className="text-left text-[13px] px-4 py-3 rounded-2xl border border-[#2a2a2e] bg-[#111118]/70 text-[#c9c9d1] hover:border-[#e8c98f]/30 hover:bg-[#18181b] transition-all duration-200"
           >
             {s}
           </button>
@@ -161,13 +171,17 @@ function Message({ role, content, isStreaming }: { role: string; content: string
     <div className={cn("flex gap-3 sm:gap-4 animate-fade-up", isUser && "flex-row-reverse")}>
       <div
         className={cn(
-          "shrink-0 w-8 h-8 rounded-full grid place-items-center text-[12px] font-semibold",
+          "shrink-0 w-8 h-8 rounded-full overflow-hidden",
           isUser
-            ? "bg-gradient-to-br from-[#e8c98f] to-[#c8b6ff] text-[#0f0f11]"
-            : "bg-[#1a1a1f] border border-[#2a2a2e] text-[#e8c98f]",
+            ? "bg-gradient-to-br from-[#e8c98f] to-[#c8b6ff] flex items-center justify-center text-[12px] font-semibold text-[#0f0f11]"
+            : "border-2 border-[#2a2a2e]",
         )}
       >
-        {isUser ? "D" : <GeminiStar className="w-4 h-4" />}
+        {isUser ? (
+          "U"
+        ) : (
+          <img src="/elara-avatar.svg" alt="Elara" className="w-full h-full object-cover" />
+        )}
       </div>
       <div className={cn("min-w-0 max-w-full", isUser ? "text-right" : "")}>
         {isUser ? (

@@ -3,15 +3,15 @@ import "./globals.css";
 import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Derrick's AI Assistant",
+  title: "Elara — AI Operational Assistant",
   description:
-    "Interactive operational assistant and knowledge engine for Derrick Odiwuor.",
+    "Elara is Derrick Odiwuor's personal AI collaborator — an operational assistant grounded in his career, articles, and blueprints.",
   authors: [{ name: "Derrick Odiwuor" }],
   metadataBase: new URL(SITE.portfolioUrl),
   openGraph: {
-    title: "Derrick's AI Assistant",
+    title: "Elara — AI Operational Assistant",
     description:
-      "Ask about Derrick's career, his articles on The Ledger, and his blueprints in the Resources Hub.",
+      "Meet Elara, Derrick Odiwuor's AI collaborator. Ask about his career, articles on The Ledger, and downloadable blueprints.",
     type: "website",
   },
 };
