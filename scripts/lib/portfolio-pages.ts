@@ -103,23 +103,36 @@ export function buildPortfolioPages(portfolioDir: string, portfolioUrl: string):
   const componentsDir = path.join(portfolioDir, "components");
   if (!fs.existsSync(componentsDir)) return [];
 
-  const files = fs.readdirSync(componentsDir).filter((f) => f.endsWith(".tsx"));
+  // Recursively find all .tsx files in components directory and subdirectories
+  // (captures components/architect/* for the consulting page, etc.)
+  const files: string[] = [];
+  function findTsxFiles(dir: string) {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        findTsxFiles(fullPath);
+      } else if (entry.isFile() && entry.name.endsWith(".tsx")) {
+        files.push(fullPath);
+      }
+    }
+  }
+  findTsxFiles(componentsDir);
+
   const pages: PortfolioPage[] = [];
-  for (const file of files) {
-    if (/AIAssistant/i.test(file)) continue; // embedding widgets, not portfolio copy
-    const abs = path.join(componentsDir, file);
+  for (const abs of files) {
+    if (/AIAssistant/i.test(abs)) continue; // embedding widgets, not portfolio copy
+    const rel = path.relative(portfolioDir, abs);
     const source = fs.readFileSync(abs, "utf8");
     const allLiterals = extractTextLiterals(source).map((s) => s.trim()).filter(Boolean);
     if (allLiterals.length === 0) continue;
     const proseLiterals = allLiterals.filter(looksLikeProse);
     // Skip sections whose captured text is almost entirely JSX/Tailwind. The
-    // bar: at least 5 prose strings OR >= 40% prose ratio. This drops Blog,
-    // Footer, and Navbar (visual chrome with no prose) without losing any
-    // section that actually carries content for the assistant to answer
-    // questions about.
+    // bar: at least 2 prose strings OR >= 20% prose ratio. This drops pure
+    // visual chrome (Blog, Navbar) without losing any section that actually
+    // carries content for the assistant to answer questions about.
     const ratio = proseLiterals.length / allLiterals.length;
-    if (proseLiterals.length < 5 && ratio < 0.4) continue;
-    const rel = `components/${file}`;
+    if (proseLiterals.length < 2 && ratio < 0.2) continue;
     const section = sectionNameFromFile(rel);
     const title = titleFromLiterals(proseLiterals) || section;
     const textBlob = proseLiterals.join("\n").trim();

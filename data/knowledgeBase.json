@@ -309,6 +309,45 @@
   ],
   "resources": [
     {
+      "id": "consulting-form-fix-enhancement-documentation",
+      "title": "Consulting Form Fix & Enhancement Documentation",
+      "category": "Executive Framework",
+      "format": "PDF Document",
+      "description": "Complete technical documentation covering the diagnosis and resolution of a broken Make.com webhook integration on the consulting intake form, plus the implementation of AI-powered personalized email notifications using Google Gemini. Includes root cause analysis, architecture decisions, prompt engineering details, iterative refinements, environment configuration, testing procedures, and future enhancement roadmap.",
+      "highlights": [
+        {
+          "label": "Root Cause Analysis",
+          "detail": "Identified missing MAKE_COM_WEBHOOK_URL environment variable as the cause of failed webhook triggers on form submission. Added variable to .env.local and Vercel production configuration."
+        },
+        {
+          "label": "AI-Personalized Email System",
+          "detail": "Built dual-email notification system using Gemini 1.5 Flash: client confirmation emails and admin notifications, each uniquely generated from form responses (company, CRM, bottleneck, tools, manual tasks). Includes robust fallback templates for API failures."
+        },
+        {
+          "label": "Prompt Engineering & Iteration",
+          "detail": "Designed structured prompts for both email types with specific tone, formatting, and content requirements. Iteratively refined: made admin format human-readable (scannable fields vs raw JSON), removed onboarding portal links per UX feedback, removed emoji from subject lines."
+        },
+        {
+          "label": "Environment & Deployment",
+          "detail": "Complete environment variable reference for local development and Vercel production. Covers SMTP, Make.com webhook, Gemini API, Supabase, Redis, Calendly, and cron secrets. Includes deployment checklist and git history summary."
+        }
+      ],
+      "tags": [
+        "Webhook Integration",
+        "Make.com",
+        "Gemini AI",
+        "Email Automation",
+        "Next.js",
+        "Technical Documentation"
+      ],
+      "filename": "consulting-form-fix-enhancement-documentation.pdf",
+      "version": "1.0.0",
+      "date": "2026-08-14",
+      "url": "https://resources-virid-nine.vercel.app/resources",
+      "downloadUrl": "https://resources-virid-nine.vercel.app/blueprints/consulting-form-fix-enhancement-documentation.pdf",
+      "body": "Consulting Form & AI\nEnhancement Guide\nThis document provides a beginner-friendly, step-by-step setup for the Portfolio Site\nConsulting Intake Form. This project involves   fi xing a broken webhook and integrating\nGoogle Gemini AI to send personalized emails.\nProject Overview\n●   Project:   Portfolio Site — Consulting Intake Form\n●   Author:   Derrick Odiwuor\n●   Date:   August 2026\n●   Primary Goal:   Ensure every \"Book Setup Sprint\" form submission triggers a\npersonalized, AI-generated email to both the client and the admin.\nStep 1: Environment Con fi guration\nBefore the code can send emails or talk to external services, you must de fi ne your\n\"secrets\" in an environment   fi le.\nLocal Setup\nCreate or update a .env.local   fi le in your root directory with the following variables:\nVariable Name   Purpose\nMAKE_COM_WEBHOOK_URL\nConnects the form to Make.com for\nautomation.\n\nVariable Name   Purpose\nGEMINI_API_KEY\nPowers the AI-generated personalized\nmessages.\nSMTP_PASSWORD\nThe App Password for your Gmail account\n(Nodemailer).\nNEXT_PUBLIC_APP_URL\nThe URL of your website (e.g.,\nhttp://localhost:3000).\nProduction Setup\nWhen deploying to   Vercel , navigate to   Settings > Environment Variables   and add\nthese same keys to ensure the live site functions correctly.\nStep 2: Fixing the Webhook\nIf form submissions are not appearing in your automation tool (Make.com), the\nwebhook is likely missing or disconnected.\n1.   Locate the Route:   Open   app/api/consulting/submit/route.ts .\n2.   Verify the Variable:   Ensure the code is looking for\nPROCESS.ENV.MAKE_COM_WEBHOOK_URL .\n3.   The Fix:   If the variable was missing from your   .env   fi le, the system would\nsilently skip the alert. Adding the URL to your environment variables solves this\nimmediately.\nStep 3: Implementing AI\nPersonalization\nWe use   Google Gemini 1.5 Flash   to read form entries and write unique responses.\n\nHow it Works\n1.   Data Collection:   The system takes the user's name, company, and project goals.\n2.   AI Prompting:   It sends this data to Gemini with instructions like: \"Write a\nprofessional email to [Name] at [Company] discussing their interest in [Project\nGoals].\"\n3.   Dual Delivery:\n○   Client Email:   A warm, personalized con fi rmation sent to the applicant.\n○   Admin Email:   A summary sent to   . Person\nFallback Protection\nIf the AI service is down or the API key expires, the system is designed to switch to a\nProfessional Template . This ensures the user always receives a con fi rmation, even if\nthe AI isn't available.\nStep 4: Formatting & Re fi nements\nBased on recent updates, the following visual and structural changes have been\napplied:\n●   Human-Readable Admin Alerts:   Admin noti fi cations no longer show messy\ncode (JSON). They are now formatted as clean, labeled text.\n●   Simpli fi ed Design:   Removed all \"Onboarding Portal\" links to keep the focus on\nthe initial consultation.\n●   Professional Subject Lines:   Removed emojis (like   🔔 ) from email subject lines to\nmaintain a corporate aesthetic.\nStep 5: Testing the Setup\nFollow this checklist to ensure everything is working perfectly.\nLocal Testing Checklist\nRun   npm run dev   and ensure no terminal errors appear.\n\nSubmit a test entry through the \"Book Setup Sprint\" form.\nCon fi rm the browser redirects to your Calendly page.\nCheck your inbox for the   Admin Noti fi cation .\nCheck the test email you used for the   Client Con fi rmation .\nVerify the emails sound \"human\" (AI-generated) rather than generic.\nProduction (Vercel) Checklist\nCon fi rm all environment variables are added to the Vercel Dashboard.\nDeploy the latest changes.\nPerform one \"Live\" submission to verify the Make.com webhook receives data.\nMaintenance & Updates\n●   To Change AI Tone:   Edit the prompt strings in   lib/email.ts .\n●   To Change Email Style:   Update the HTML templates within the   generate\nfunctions in   lib/email.ts .\n●   To Add Form Fields:   Update the UI in   intake-form.tsx , add the   fi eld to the\nZod schema in   validation.ts , and pass the new data to the AI prompt in the\nsubmit route.\n\n--- Presenting page ---\nuse client\nreact\nframer-motion\n@/lib/resources\n@/lib/types\n@/components/ResourceCard\n@/components/DownloadModal\nDownload Started\n/api/download/${selectedResource.filename}\nDownload failed\na\na\n/blueprints/${selectedResource.filename}\nDownload Started\nDownload Completed\nrelative py-24 md:py-32 bg-cream dark:bg-deep pt-28\nmax-w-6xl mx-auto px-6 md:px-8\ntext-center mb-16\ntext-sm uppercase tracking-[0.25em] font-semibold text-warm-500 dark:text-warm-400 mb-4\ntext-4xl md:text-5xl font-display font-bold text-warm-900 dark:text-warm-100\ntext-warm-600 dark:text-warm-400 text-lg max-w-2xl mx-auto mt-5 leading-relaxed\ngrid md:grid-cols-2 gap-6 md:gap-8\ntext-center py-20\ntext-warm-500 dark:text-warm-400 text-lg\nuse client\nframer-motion\nlucide-react\n@/lib/types\ngroup bg-white dark:bg-warm-900 rounded-2xl border border-warm-200 dark:border-warm-800 p-6 md:p-8 hover:shadow-xl hover:border-warm-300 dark:hover:border-warm-700 hover:-translate-y-1 transition-all duration-300\nflex items-start justify-between gap-4 mb-4\nflex flex-wrap items-center gap-2\npx-2.5 py-0.5 rounded-full bg-warm-100 dark:bg-warm-800 text-warm-600 dark:text-warm-400 text-xs font-medium\npx-2.5 py-0.5 rounded-full border border-warm-200 dark:border-warm-700 text-warm-500 dark:text-warm-400 text-xs font-medium flex items-center gap-1\nw-3 h-3\ntext-lg font-display font-bold text-warm-900 dark:text-warm-100 mb-3 leading-snug\ntext-warm-600 dark:text-warm-300 text-sm leading-relaxed mb-5\nspace-y-3 mb-6\nflex items-start gap-2.5\nw-4 h-4 text-accent dark:text-warm-300 flex-shrink-0 mt-0.5\ntext-sm font-semibold text-warm-800 dark:text-warm-200\ntext-xs text-warm-500 dark:text-warm-400 leading-relaxed\nflex flex-wrap gap-1.5 mb-6\npx-2.5 py-1 rounded-lg bg-warm-100 dark:bg-warm-800 text-warm-600 dark:text-warm-400 text-xs font-medium\nw-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-warm-900 dark:bg-warm-100 text-white dark:text-warm-900 font-medium hover:bg-warm-800 dark:hover:bg-warm-200 transition-colors shadow-sm text-sm\nw-4 h-4\nw-3.5 h-3.5 opacity-60"
+    },
+    {
       "id": "gtd-asana-workflow-guide",
       "title": "Getting Things Done (GTD) Workflow Implementation for Asana",
       "category": "SOP Blueprint",
@@ -835,6 +874,13 @@
       "textBlob": "Off the Clock\nBeyond Work\nA few moments outside the dashboard. Paintballing with the crew, team building offsites, and conversations that started as networking and became something more. Drag the top card to see the next.\nTeam Building\nPaintballing with the team\nTeam building offsite\nNetworking event conversation"
     },
     {
+      "section": "Blog",
+      "sourceFile": "components/BlogSection.tsx",
+      "title": "w-3.5 h-3.5",
+      "url": "https://portfoliosite-pearl-one.vercel.app/",
+      "textBlob": "w-3.5 h-3.5\nw-3.5 h-3.5"
+    },
+    {
       "section": "Certifications",
       "sourceFile": "components/CertificationsSection.tsx",
       "title": "Salesforce Certified Platform Administrator",
@@ -854,6 +900,13 @@
       "title": "Executive Partner",
       "url": "https://portfoliosite-pearl-one.vercel.app/",
       "textBlob": "Executive Partner\nJun 2025\nRealigned executive calendars, increasing protected focus time by 35% in 6 months.\nReduced interruptions by 50% in 90 days by triaging incoming communications and investment analysis requests.\nCoordinated cross-functional teams using Asana to deliver 95% of 10 major projects on time.\nDocumented optimized internal processes to enhance overall team productivity.\nProduct Content and Email Specialist\nGaotek (USA / Remote)\nJun 2024\nAug 2024\nImplemented PHP/MySQL optimizations, raising website speed by 35% and organic traffic by 20%.\nCreated and edited 50+ high-impact marketing pieces, boosting audience engagement by 15%.\nAligned content strategy with core revenue goals to increase generated leads by 10%.\nData Analyst\nExcelerate (Remote)\nJun 2024\nJul 2024\nReduced reporting time by 30% across 10+ campaigns via custom data visualizations in Python, Tableau, and JIRA.\nDelivered statistical insights driving a 12% increase in monthly campaign ROI.\nAuthored 20+ stakeholder presentations, increasing engagement by 25%.\nPortfolio Manager\nIlara Health\nJun 2021\nAug 2024\nModeled automated collection workflows via Smartsheet, reducing outstanding receivables and bad debt by 20%.\nRe-engaged 50 churned healthcare clients through targeted strategies, achieving a 10% reactivation rate.\nManaged a 120-client portfolio, driving a 15% increase in client acquisition and overall retention.\nSenior Sales Representative\nIlara Health\nJun 2021\nAug 2023\nEstablished onboarding processes exceeding GMV targets by 10% and adding KES 10M in annual revenue.\nLed sales training for 20 telesales reps, boosting overall product adoption rates.\nPromoted medical supply packages to 100+ providers, securing high-value contracts.\nRelationship Manager\nJan 2020\nFeb 2021\nImproved supply chain tracking efficiency by 18% through digital tool implementations.\nManaged 30+ corporate accounts with a 95% retention rate using Act-On CRM.\nMaster of Business Administration (MBA)\nWoolf University\n2025 – 2027\nB.S. Analytical Chemistry\nJomo Kenyatta University of Agriculture and Technology\n2014 – 2018\nHubSpot CRM\nSalesforce CRM\nGoogle Analytics\nAgile Project Management\nw-3.5 h-3.5 text-warm-500 dark:text-warm-400"
+    },
+    {
+      "section": "Footer",
+      "sourceFile": "components/Footer.tsx",
+      "title": "Portfolio Home",
+      "url": "https://portfoliosite-pearl-one.vercel.app/",
+      "textBlob": "Portfolio Home\nConsulting & Architecture\nResource Hub\nTerms & Conditions\nPrivacy Policy\nEcosystem navigation\n(opens in new tab)\n0 0 24 24\nM10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14\nLegal and compliance"
     },
     {
       "section": "Hero",
@@ -882,6 +935,83 @@
       "title": "Executive Ops & Management",
       "url": "https://portfoliosite-pearl-one.vercel.app/",
       "textBlob": "Executive Ops & Management\nTask & Schedule Management\nCalendar Realignment\nTravel Support\nExecutive Communications\nProcess Optimization\nCRM & Sales Tools\nHubSpot CRM\nSalesforce CRM\nAct-On CRM\nAnalytics & Visualization\nPower BI\nGoogle Analytics\nAdvanced Excel\nProject Management & Collaboration\nGoogle Workspace\nMicrosoft Teams"
+    },
+    {
+      "section": "Architect Contact",
+      "sourceFile": "components/architect/ArchitectContact.tsx",
+      "title": "Name is required",
+      "url": "https://portfoliosite-pearl-one.vercel.app/",
+      "textBlob": "Name is required\nEmail is required\nPlease enter a valid email\nSubject is required\nMessage is required\nMessage must be at least 10 characters\n[ConsultingForm] API response:\n[ConsultingForm] API error:\nYour Name\nYour Work Email\nTell me about your bottleneck"
+    },
+    {
+      "section": "Architect Footer",
+      "sourceFile": "components/architect/ArchitectFooter.tsx",
+      "title": "Case Studies",
+      "url": "https://portfoliosite-pearl-one.vercel.app/",
+      "textBlob": "Case Studies\nProblem & Solution"
+    },
+    {
+      "section": "Architect Hero",
+      "sourceFile": "components/architect/ArchitectHero.tsx",
+      "title": "Executive Focus Time",
+      "url": "https://portfoliosite-pearl-one.vercel.app/",
+      "textBlob": "Executive Focus Time\nRecovered through calendar realignment\nReceivables Reduction\nOutstanding receivables decreased\nOn-Time Delivery\nCross-functional project workstreams\nw-3.5 h-3.5 text-[#7A8B7B] dark:text-warm-300\nView Case Studies\nSchedule a Consultation"
+    },
+    {
+      "section": "Architect Pillars",
+      "sourceFile": "components/architect/ArchitectPillars.tsx",
+      "title": "Project Management Expertise",
+      "url": "https://portfoliosite-pearl-one.vercel.app/",
+      "textBlob": "Project Management Expertise\nEnd-to-end execution of complex initiatives\nAgile & Scrum framework implementation\nCross-functional team leadership\nEnterprise tool mastery — Asana & Jira\nCRM Architecture & Optimization\nStrategic sales-pipeline design\nLarge-scale database cleanups & migration\nHubSpot & GoHighLevel integrations\nSalesforce integration & advanced reporting\nAI Automation Workflows\nCustom n8n & Zapier logic engines\nMulti-agent LLM pipeline development\nLead-capture to CRM automation\nHuman-in-the-loop autonomous flows\nw-2.5 h-2.5 text-grey-700 dark:text-grey-300"
+    },
+    {
+      "section": "Flip Cards",
+      "sourceFile": "components/architect/FlipCards.tsx",
+      "title": "Financial Operations & Credit Risk",
+      "url": "https://portfoliosite-pearl-one.vercel.app/",
+      "textBlob": "Financial Operations & Credit Risk\nFragmented Credit Underwriting & Uncontrolled Bad Debt\nManual document intake for healthcare accounts led to high default risks.\nArbitrary credit limits granted without regulatory or cash flow verification.\nReactive payment chasing across 120 client accounts.\nHigh Outstanding Receivables & Default Exposure\nSystem Design & Automation\nAutomated Compliance & DTI Underwriting Pipeline\nIntegrated HubSpot Approval Workflows to lock deals pending statutory checks (Pharmacy & Poisons Board permits).\nBuilt a 4-step DTI calculation model incorporating Metropol CRB cross-referencing.\nConfigured automated multi-stage reminder engine using HubSpot, Salesforce, & Smartsheet aging trackers.\n-20% Reduction in Bad Debt & Receivables\n120 Accounts Standardized Without Headcount Increase\nMarketing Analytics & Spend Efficiency\nInefficient Ad Spend & High Cost-Per-Result (CPR)\nSuperhero U campaign suffered from high ad spend without proportional conversion/click returns.\nUnderperforming ad sets (e.g., Campaigns 3 & 10) exhibited severe Cost Per Result (CPR) inflation.\nLack of data-driven budget allocation across target demographic groups.\nCapital Inefficiency & High CPR\nData Analysis & Capital Reallocation\nPerformance Audit & Automated Capital Reallocation\nConducted cross-campaign performance analysis comparing Clicks, Unique Clicks, and CPR metrics.\nFormulated an evidence-based recommendation framework to decommission low-performing campaigns (3 & 10).\nDirected capital reallocation toward high-ROI campaigns (2, 7, & 8).\n+12% Improvement in Overall Campaign ROI\nData-Driven Capital Reallocation & CPR Reduction\nw-4.5 h-4.5 text-[#7A8B7B] dark:text-grey-300\nspace-y-2.5 mb-auto\nw-4.5 h-4.5 text-[#7A8B7B] dark:text-[#9CB09D]\nspace-y-2.5 mb-auto"
+    },
+    {
+      "section": "circular-testimonials",
+      "sourceFile": "components/ui/circular-testimonials.tsx",
+      "title": "translateX(0px) translateY(0px) scale(1) rotateY(0deg)",
+      "url": "https://portfoliosite-pearl-one.vercel.app/",
+      "textBlob": "translateX(0px) translateY(0px) scale(1) rotateY(0deg)\nall 0.8s cubic-bezier(.4,2,.3,1)\nall 0.8s cubic-bezier(.4,2,.3,1)\nall 0.8s cubic-bezier(.4,2,.3,1)\nall 0.8s cubic-bezier(.4,2,.3,1)\narrow-button prev-button\nPrevious testimonial\narrow-button next-button\nNext testimonial\n.testimonial-container {\n          width: 100%;\n          max-width: 56rem;\n          padding: 2rem;\n        }\n        .testimonial-grid {\n          display: grid;\n          gap: 5rem;\n        }\n        .image-container {\n          position: relative;\n          width: 100%;\n          height: 24rem;\n          perspective: 1000px;\n        }\n        .testimonial-image {\n          position: absolute;\n          width: 100%;\n          height: 100%;\n          object-fit: cover;\n          border-radius: 1.5rem;\n          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);\n        }\n        .testimonial-content {\n          display: flex;\n          flex-direction: column;\n          justify-content: space-between;\n        }\n        .name {\n          font-weight: bold;\n          margin-bottom: 0.25rem;\n        }\n        .designation {\n          margin-bottom: 2rem;\n        }\n        .quote {\n          line-height: 1.75;\n        }\n        .arrow-buttons {\n          display: flex;\n          gap: 1.5rem;\n          padding-top: 3rem;\n        }\n        .arrow-button {\n          width: 2.7rem;\n          height: 2.7rem;\n          border-radius: 50%;\n          display: flex;\n          align-items: center;\n          justify-content: center;\n          cursor: pointer;\n          transition: background-color 0.3s;\n          border: none;\n        }\n        .word {\n          display: inline-block;\n        }\n        @media (min-width: 768px) {\n          .testimonial-grid {\n            grid-template-columns: 1fr 1fr;\n          }\n          .arrow-buttons {\n            padding-top: 0;\n          }\n        }"
+    },
+    {
+      "section": "flow-button",
+      "sourceFile": "components/ui/flow-button.tsx",
+      "title": "Modern Button",
+      "url": "https://portfoliosite-pearl-one.vercel.app/",
+      "textBlob": "Modern Button\nvar(--flow-button-border, rgba(28,27,24,0.4))\nvar(--flow-button-color, #1C1B18)"
+    },
+    {
+      "section": "growth-plans",
+      "sourceFile": "components/ui/growth-plans.tsx",
+      "title": "Complete System & CRM Setup Sprint",
+      "url": "https://portfoliosite-pearl-one.vercel.app/",
+      "textBlob": "Complete System & CRM Setup Sprint\nSingle Entry Tier\nA dedicated hands-on sprint covering full operational assessment, CRM platform selection, and AI-driven automation setup tailored for scaling teams.\n/ 4 Hours\nCRM Suggestion & Setup\nEvaluation of your business needs to recommend and configure the right platform (Salesforce, HubSpot, or GoHighLevel), including lead stage pipelines and contact mapping.\nAI-Driven Automation\nBuilding custom AI logic engines and workflow triggers (using Zapier or n8n) to eliminate repetitive manual entry and speed up lead response.\nHands-On Configuration\nLive, 4-hour implementation session focused on directly building out and testing your core operational workflows.\nSystem Blueprint & Walkthrough\nClear documentation and a personalized walkthrough so you can easily manage and run your new setup moving forward.\nw-3.5 h-3.5 text-[#8C8275] dark:text-grey-500\nw-3.5 h-3.5 stroke-[2.5]\nBook Setup Sprint"
+    },
+    {
+      "section": "intake-form",
+      "sourceFile": "components/ui/intake-form.tsx",
+      "title": "OpenAI API",
+      "url": "https://portfoliosite-pearl-one.vercel.app/",
+      "textBlob": "OpenAI API\nGoogle Sheets\nCRM & Overview\nSubmission failed\nSomething went wrong."
+    },
+    {
+      "section": "switch",
+      "sourceFile": "components/ui/switch.tsx",
+      "title": "background-color, color",
+      "url": "https://portfoliosite-pearl-one.vercel.app/",
+      "textBlob": "peer inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input\nbackground-color, color"
+    },
+    {
+      "section": "toggle-theme",
+      "sourceFile": "components/ui/toggle-theme.tsx",
+      "title": "Switch to light mode",
+      "url": "https://portfoliosite-pearl-one.vercel.app/",
+      "textBlob": "Switch to light mode\ncolor, opacity\nToggle between dark and light mode\ndata-[state=checked]:bg-warm-900 data-[state=unchecked]:bg-warm-200\nSwitch to dark mode\ncolor, opacity"
     }
   ],
   "sites": {
@@ -890,14 +1020,14 @@
     "resources": "https://resources-virid-nine.vercel.app/resources"
   },
   "meta": {
-    "generatedAt": "2026-07-30T15:52:17.740Z",
+    "generatedAt": "2026-08-14T15:18:35.908Z",
     "sourceCounts": {
       "experiences": 6,
       "articles": 15,
-      "resources": 13,
+      "resources": 14,
       "testimonials": 3,
-      "portfolioPages": 8,
-      "blueprintBytes": 269708
+      "portfolioPages": 21,
+      "blueprintBytes": 275871
     }
   }
 }
