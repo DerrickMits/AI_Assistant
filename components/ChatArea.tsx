@@ -77,7 +77,7 @@ export default function ChatArea(props: ChatAreaProps) {
         <button
           onClick={onOpenSidebar}
           aria-label="Open sidebar"
-          className="absolute left-3 top-3 z-20 w-10 h-10 grid place-items-center rounded-full text-[#c9c9d1] hover:bg-white/5 transition-colors"
+          className="absolute left-3 top-3 z-20 w-10 h-10 grid place-items-center rounded-full text-[#8a8a8a] hover:bg-white/20 transition-colors"
         >
           <PanelLeftOpen className="w-5 h-5" />
         </button>
@@ -87,7 +87,7 @@ export default function ChatArea(props: ChatAreaProps) {
       <div className="hidden lg:flex absolute right-5 bottom-28 z-10 pointer-events-none">
         <div
           aria-hidden
-          className="sparkle-pulse w-11 h-11 rounded-full bg-[#1a1a1f]/80 backdrop-blur grid place-items-center border border-[#3a3a40]"
+          className="sparkle-pulse w-11 h-11 rounded-full bg-[#e8e8e8]/80 backdrop-blur grid place-items-center border border-[#d8d8d8]"
         >
           <Sparkles className="w-5 h-5 text-[#e8c98f]" />
         </div>
@@ -135,20 +135,20 @@ function Greeting({ onPick }: { onPick: (s: string) => void }) {
   return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center text-center animate-fade-up">
       <div className="relative mb-8">
-        <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-[#3a3a40] shadow-2xl shadow-[#e8c98f]/20">
+        <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-[#d8d8d8] shadow-2xl shadow-[#e8c98f]/20">
           <img src="/elara-avatar.svg" alt="Elara" className="w-full h-full object-cover" />
         </div>
-        <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[#1a1a1f] border-2 border-[#3a3a40] grid place-items-center">
+        <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[#f8f6f0] border-2 border-[#d8d8d8] grid place-items-center">
           <span className="text-[10px] font-bold text-[#e8c98f]">E</span>
         </div>
       </div>
-      <h1 className="text-[34px] sm:text-[40px] font-medium tracking-tight text-[#e8e8ee] mb-2">
+      <h1 className="text-[34px] sm:text-[40px] font-medium tracking-tight text-[#1a1a1a] mb-2">
         Meet <span className="text-[#e8c98f]">Elara</span>
       </h1>
-      <p className="mt-2 text-[15px] text-[#9a9aa3] mb-1">
+      <p className="mt-2 text-[15px] text-[#5f5f5f] mb-1">
         Derrick's AI collaborator & operational assistant
       </p>
-      <p className="text-[13px] text-[#7a7a85] max-w-md">
+      <p className="text-[13px] text-[#8a8a8a] max-w-md">
         Ask me anything about Derrick's career, his articles on The Ledger, or his downloadable blueprints.
       </p>
       <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-xl">
@@ -156,7 +156,7 @@ function Greeting({ onPick }: { onPick: (s: string) => void }) {
           <button
             key={s}
             onClick={() => onPick(s)}
-            className="text-left text-[13px] px-4 py-3 rounded-2xl border border-[#2a2a2e] bg-[#111118]/70 text-[#c9c9d1] hover:border-[#e8c98f]/30 hover:bg-[#18181b] transition-all duration-200"
+            className="text-left text-[13px] px-4 py-3 rounded-2xl border border-[#d8d8d8] bg-[#f8f6f0]/70 text-[#1a1a1a] hover:border-[#e8c98f]/30 hover:bg-[#e8e8e8] transition-all duration-200"
           >
             {s}
           </button>
@@ -174,8 +174,8 @@ function Message({ role, content, isStreaming }: { role: string; content: string
         className={cn(
           "shrink-0 w-8 h-8 rounded-full overflow-hidden",
           isUser
-            ? "bg-gradient-to-br from-[#e8c98f] to-[#c8b6ff] flex items-center justify-center text-[12px] font-semibold text-[#0f0f11]"
-            : "border-2 border-[#2a2a2e]",
+            ? "bg-gradient-to-br from-[#e8c98f] to-[#c8b6ff] flex items-center justify-center text-[12px] font-semibold text-[#1a1a1a]"
+            : "border-2 border-[#d8d8d8]",
         )}
       >
         {isUser ? (
@@ -186,7 +186,7 @@ function Message({ role, content, isStreaming }: { role: string; content: string
       </div>
       <div className={cn("min-w-0 max-w-full", isUser ? "text-right" : "")}>
         {isUser ? (
-          <p className="inline-block text-[15px] text-[#e8e8ee] bg-[#1f3a5f]/20 border border-[#2a4163]/40 rounded-2xl rounded-tr-sm px-4 py-2.5 whitespace-pre-wrap">
+          <p className="inline-block text-[15px] text-[#1a1a1a] bg-[#e8e8e8]/20 border border-[#d8d8d8]/40 rounded-2xl rounded-tr-sm px-4 py-2.5 whitespace-pre-wrap">
             {content}
           </p>
         ) : (
@@ -196,7 +196,7 @@ function Message({ role, content, isStreaming }: { role: string; content: string
             ) : isStreaming ? (
               <ThinkingAnimation />
             ) : (
-              <span className="text-[#9a9aa3] text-[14px]">Thinking...</span>
+              <span className="text-[#8a8a8a] text-[14px]">Thinking...</span>
             )}
             {isStreaming && content && <span className="caret-blink" />}
           </div>

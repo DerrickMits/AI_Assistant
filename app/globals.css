@@ -1,57 +1,59 @@
 @import "tailwindcss";
 
 /* ----------------------------------------------------------------------------
-   AI Assistant — dark-only "Gemini" theme derived from Derrick's brand palette
-   Cream accent: #FDFBF7  ·  Slate base: #0F111A / #18181b / #0F0F11
+   AI Assistant — light theme with light grey and cream colors
+   Cream accent: #FDFBF7  ·  Light grey base: #F5F5F5 / #E8E8E8 / #D8D8D8
 ---------------------------------------------------------------------------- */
 
 :root {
   --cream: #fdfbf7;
-  --slate-0: #050508;
-  --slate-1: #090a0f;
-  --slate-2: #0f111a;
-  --sidebar: #0f0f11;
-  --panel: #18181b;
-  --border: #2a2a2e;
-  --border-soft: #232327;
-  --text: #e8e8ee;
-  --text-muted: #a0a0aa;
-  --text-faint: #6f6f78;
-  --accent: #f3d9b3;
-  --accent-strong: #e8c98f;
+  --cream-light: #f8f6f0;
+  --light-grey: #f5f5f5;
+  --light-grey-darker: #e8e8e8;
+  --light-grey-light: #d8d8d8;
+  --sidebar: #f8f6f0;
+  --panel: #ffffff;
+  --border: #d8d8d8;
+  --border-soft: #c8c8c8;
+  --text: #1a1a1a;
+  --text-muted: #5f5f5f;
+  --text-faint: #8a8a8a;
+  --accent: #e8c98f;
+  --accent-strong: #d4a850;
 }
 
 @theme inline {
   --color-cream: #fdfbf7;
-  --color-slate-0: #050508;
-  --color-slate-1: #090a0f;
-  --color-slate-2: #0f111a;
-  --color-sidebar: #0f0f11;
-  --color-panel: #18181b;
-  --color-border-base: #2a2a2e;
-  --color-text-base: #e8e8ee;
-  --color-text-muted: #a0a0aa;
-  --color-text-faint: #6f6f78;
-  --color-accent: #f3d9b3;
-  --color-accent-strong: #e8c98f;
+  --color-cream-light: #f8f6f0;
+  --color-light-grey: #f5f5f5;
+  --color-light-grey-darker: #e8e8e8;
+  --color-light-grey-light: #d8d8d8;
+  --color-sidebar: #f8f6f0;
+  --color-panel: #ffffff;
+  --color-border-base: #d8d8d8;
+  --color-text-base: #1a1a1a;
+  --color-text-muted: #5f5f5f;
+  --color-text-faint: #8a8a8a;
+  --color-accent: #e8c98f;
+  --color-accent-strong: #d4a850;
 
-  /* Derrick's brand stone (warm) scale, mirroring the portfolio project. */
-  --color-warm-50: #fafaf9;
-  --color-warm-100: #f5f5f4;
-  --color-warm-200: #e7e5e4;
-  --color-warm-300: #d6d3d1;
-  --color-warm-400: #a8a29e;
-  --color-warm-500: #78716c;
-  --color-warm-600: #57534e;
-  --color-warm-700: #44403c;
-  --color-warm-800: #292524;
-  --color-warm-900: #1c1917;
-  --color-deep: #0c0a09;
+  /* Light grey scale for the new theme. */
+  --color-cream-50: #fdfbf7;
+  --color-cream-100: #f8f6f0;
+  --color-cream-200: #f0f0e8;
+  --color-cream-300: #e8e0d8;
+  --color-cream-400: #d8d0b8;
+  --color-cream-500: #c8b898;
+  --color-cream-600: #b8a088;
+  --color-cream-700: #a08870;
+  --color-cream-800: #887058;
+  --color-cream-900: #705840;
+  --color-light: #f5f5f5;
 }
 
 html, body {
   height: 100%;
-  background: radial-gradient(120% 80% at 50% 0%, #0f111a 0%, #090a0f 55%, #050508 100%);
+  background: radial-gradient(120% 80% at 50% 0%, #f5f5f5 0%, #e8e8e8 55%, #d8d8d8 100%);
   color: var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica,
     "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji";
@@ -65,12 +67,12 @@ html, body {
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.15);
   border-radius: 9999px;
   border: 2px solid transparent;
   background-clip: content-box;
 }
-::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.16); background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.25); background-clip: content-box; }
 
 /* Fade / rise animation used by greeting and rows. */
 @keyframes fade-up {
@@ -114,7 +116,7 @@ html, body {
 .thinking-glow { animation: thinking-glow 2s ease-in-out infinite; }
 
 /* ----------------------------------------------------------------------------
-   Assistant markdown ("article-prose", dark adapted from sibling Ledger site)
+   Assistant markdown ("article-prose", light theme)
 ---------------------------------------------------------------------------- */
 .chat-prose { font-size: 1rem; line-height: 1.75; color: var(--text); }
 .chat-prose > *:first-child { margin-top: 0; }
@@ -143,14 +145,14 @@ html, body {
 .chat-prose strong { color: var(--cream); font-weight: 600; }
 .chat-prose em { font-style: italic; color: var(--text-muted); }
 .chat-prose code {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.05);
   padding: 0.1rem 0.35rem;
   border-radius: 6px;
   font-size: 0.85em;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 .chat-prose pre {
-  background: #0c0d14;
+  background: #f8f6f0;
   border: 1px solid var(--border-soft);
   padding: 0.9rem 1rem;
   border-radius: 12px;
@@ -167,4 +169,4 @@ html, body {
 .chat-prose hr { border: none; border-top: 1px solid var(--border-soft); margin: 1.2rem 0; }
 .chat-prose table { width: 100%; border-collapse: collapse; margin: 0.8rem 0; font-size: 0.9em; }
 .chat-prose th, .chat-prose td { border: 1px solid var(--border-soft); padding: 0.4rem 0.6rem; text-align: left; }
-.chat-prose th { background: rgba(255, 255, 255, 0.04); font-weight: 600; }
+.chat-prose th { background: rgba(0, 0, 0, 0.03); font-weight: 600; }

@@ -255,7 +255,7 @@ const AIChatInput = ({
                 aria-label="Attach file"
               />
               <button
-                className="p-3 rounded-full text-warm-500 hover:bg-warm-100 transition"
+                className="p-3 rounded-full text-[#8a8a8a] hover:bg-cream transition"
                 title="Attach file"
                 type="button"
                 tabIndex={-1}
@@ -277,7 +277,7 @@ const AIChatInput = ({
                 onChange={(e) => onChange(e.target.value)}
                 onKeyDown={onKeyDown}
                 onFocus={handleActivate}
-                className="flex-1 border-0 outline-0 rounded-md py-2 text-base bg-transparent w-full font-normal text-[#1C1917] pr-12"
+                className="flex-1 border-0 outline-0 rounded-md py-2 text-base bg-transparent w-full font-normal text-[#1a1a1a] pr-12"
                 style={{ position: "relative", zIndex: 1 }}
                 aria-label="Ask Derrick's AI Assistant"
                 placeholder=" "
@@ -287,7 +287,7 @@ const AIChatInput = ({
                   {showPlaceholder && !isActive && !value && attachedFiles.length === 0 && (
                     <motion.span
                       key={placeholderIndex}
-                      className="absolute left-0 top-1/2 -translate-y-1/2 text-[#78716C] select-none pointer-events-none"
+                      className="absolute left-0 top-1/2 -translate-y-1/2 text-[#8a8a8a] select-none pointer-events-none"
                       style={{
                         whiteSpace: "nowrap",
                         overflow: "hidden",
@@ -318,7 +318,7 @@ const AIChatInput = ({
 
             {/* Mic - Voice Recording */}
             <button
-              className={`p-3 rounded-full transition ${isRecording ? "bg-red-500 text-white" : "text-warm-500 hover:bg-warm-100"}`}
+              className={`p-3 rounded-full transition ${isRecording ? "bg-red-500 text-white" : "text-[#8a8a8a] hover:bg-cream"}`}
               title={isRecording ? "Stop recording" : "Voice input"}
               type="button"
               tabIndex={-1}
@@ -336,7 +336,7 @@ const AIChatInput = ({
             {isStreaming ? (
               <button
                 onClick={(e) => { e.stopPropagation(); onStop(); }}
-                className="p-3 rounded-full bg-[#1C1917] text-cream hover:bg-[#0C0A09] transition flex items-center justify-center"
+                className="p-3 rounded-full bg-[#e8e8e8] text-[#1a1a1a] hover:bg-[#d8d8d8] transition flex items-center justify-center"
                 title="Stop"
                 type="button"
                 tabIndex={-1}
@@ -347,7 +347,7 @@ const AIChatInput = ({
             ) : (
               <button
                 onClick={(e) => { e.stopPropagation(); submit(); }}
-                className="p-3 rounded-full bg-gradient-to-br from-[#e8c98f] to-[#d4a850] text-[#0C0A09] hover:from-[#f3d9b3] hover:to-[#e8c98f] transition flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+                className="p-3 rounded-full bg-gradient-to-br from-[#e8c98f] to-[#d4a850] text-[#1a1a1a] hover:from-[#f3d9b3] hover:to-[#e8c98f] transition flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
                 title="Send"
                 type="button"
                 tabIndex={-1}
@@ -371,17 +371,17 @@ const AIChatInput = ({
                 {attachedFiles.map((file) => (
                   <div
                     key={file.id}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-warm-100 rounded-full text-sm"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-cream rounded-full text-sm"
                   >
                     <span className="flex items-center">{getFileIcon(file.type)}</span>
-                    <span className="text-[#1C1917] truncate max-w-[150px]">{file.name}</span>
-                    <span className="text-[#78716C] text-xs">{formatFileSize(file.size)}</span>
+                    <span className="text-[#1a1a1a] truncate max-w-[150px]">{file.name}</span>
+                    <span className="text-[#8a8a8a] text-xs">{formatFileSize(file.size)}</span>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         onRemoveFile?.(file.id);
                       }}
-                      className="p-1 rounded-full hover:bg-warm-200 text-[#78716C] hover:text-[#1C1917]"
+                      className="p-1 rounded-full hover:bg-cream-light text-[#8a8a8a] hover:text-[#1a1a1a]"
                       aria-label={`Remove ${file.name}`}
                     >
                       <X size={14} />
@@ -414,7 +414,7 @@ const AIChatInput = ({
             style={{ marginTop: 8 }}
           >
             {/* Right-side brand hint */}
-            <div className="flex items-center gap-1.5 text-[11px] text-warm-400 select-none">
+            <div className="flex items-center gap-1.5 text-[11px] text-[#8a8a8a] select-none">
               <Sparkles size={12} className="text-[#e8c98f]" />
               <span>Grounded on Derrick's portfolio</span>
             </div>
@@ -422,7 +422,7 @@ const AIChatInput = ({
         </div>
       </motion.div>
 
-      <p className="text-center text-[11px] text-[#6f6f78] mt-2">
+      <p className="text-center text-[11px] text-[#8a8a8a] mt-2">
         Derrick's AI Assistant may produce inaccurate info; verify key details.
       </p>
     </div>
