@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { Sparkles, PanelLeftOpen } from "lucide-react";
 import type { UIMessage } from "@ai-sdk/ui-utils";
 import MarkdownContent from "@/components/MarkdownContent";
-import { AIChatInput as InputBar } from "@/components/ai-chat-input";
+import { AIChatInput as InputBar, AttachedFile } from "@/components/ai-chat-input";
 import { GeminiStar } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +20,12 @@ interface ChatAreaProps {
   onStop: () => void;
   onOpenSidebar: () => void;
   sidebarOpen: boolean;
+  attachedFiles?: AttachedFile[];
+  onAttachFile?: (file: AttachedFile) => void;
+  onRemoveFile?: (id: string) => void;
+  onVoiceTranscription?: (text: string) => void;
+  isRecording?: boolean;
+  onToggleRecording?: () => void;
 }
 
 /**
@@ -50,6 +56,7 @@ const SUGGESTIONS = [
 export default function ChatArea(props: ChatAreaProps) {
   const {
     messages, isStreaming, inputValue, onChangeInput, onSubmit, onStop, onOpenSidebar, sidebarOpen,
+    attachedFiles, onAttachFile, onRemoveFile, onVoiceTranscription, isRecording, onToggleRecording,
   } = props;
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -111,6 +118,12 @@ export default function ChatArea(props: ChatAreaProps) {
           onSubmit={onSubmit}
           onStop={onStop}
           isStreaming={isStreaming}
+          attachedFiles={attachedFiles}
+          onAttachFile={onAttachFile}
+          onRemoveFile={onRemoveFile}
+          onVoiceTranscription={onVoiceTranscription}
+          isRecording={isRecording}
+          onToggleRecording={onToggleRecording}
         />
       </div>
     </div>

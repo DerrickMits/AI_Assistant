@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { useState, useEffect, useRef } from "react";
-import { Mic, Paperclip, Send, Square, Sparkles } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Mic, Paperclip, Send, Square, Sparkles, X, FileText, Mic2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
 /**
@@ -25,12 +25,26 @@ const PLACEHOLDERS = [
   "Walk me through Derrick's Salesforce admin pillars",
 ];
 
+interface AttachedFile {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  base64: string;
+}
+
 interface AIChatInputProps {
   value: string;
   onChange: (v: string) => void;
   onSubmit: () => void;
   onStop: () => void;
   isStreaming: boolean;
+  attachedFiles?: AttachedFile[];
+  onAttachFile?: (file: AttachedFile) => void;
+  onRemoveFile?: (id: string) => void;
+  onVoiceTranscription?: (text: string) => void;
+  isRecording?: boolean;
+  onToggleRecording?: () => void;
 }
 
 const AIChatInput = ({
@@ -39,12 +53,20 @@ const AIChatInput = ({
   onSubmit,
   onStop,
   isStreaming,
+  attachedFiles = [],
+  onAttachFile,
+  onRemoveFile,
+  onVoiceTranscription,
+  isRecording = false,
+  onToggleRecording,
 }: AIChatInputProps) => {
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [showPlaceholder, setShowPlaceholder] = useState(true);
   const [isActive, setIsActive] = useState(false);
+  const [showFilePreview, setShowFilePreview] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Cycle placeholder text when input is inactive.
   useEffect(() => {
@@ -63,22 +85,75 @@ const AIChatInput = ({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
-        if (!value) setIsActive(false);
+        if (!value && attachedFiles.length === 0) setIsActive(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [value]);
+  }, [value, attachedFiles.length]);
 
   const handleActivate = () => {
     setIsActive(true);
     inputRef.current?.focus();
   };
 
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    Array.from(files).forEach(async (file) => {
+      // Validate file type
+      const allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'text/plain',
+        'image/png',
+        'image/jpeg',
+        'image/jpg',
+        'image/gif',
+        'image/webp',
+      ];
+      
+      if (!allowedTypes.includes(file.type)) {
+        alert(`File type ${file.type} not supported. Please use PDF, DOC, DOCX, TXT, PNG, JPG, GIF, or WebP.`);
+        return;
+      }
+      
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`File ${file.name} is too large. Maximum size is 10MB.`);
+        return;
+      }
+      
+      // Convert to base64
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      
+      const attachedFile: AttachedFile = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        base64,
+      };
+      
+      onAttachFile?.(attachedFile);
+    });
+    
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, [onAttachFile]);
+
   const submit = () => {
-    if (!value.trim() || isStreaming) return;
+    if (!value.trim() && attachedFiles.length === 0 || isStreaming) return;
     onSubmit();
-    // Keep expanded so the user sees the controls; clear handled by parent.
     inputRef.current?.focus();
   };
 
@@ -91,7 +166,6 @@ const AIChatInput = ({
 
   const containerVariants = {
     collapsed: {
-      // 68px input row; we keep the expanded controls hidden in this state.
       height: 72,
       boxShadow: "0 8px 30px -10px rgba(0,0,0,0.6)",
       transition: { type: "spring" as const, stiffness: 120, damping: 18 },
@@ -133,7 +207,20 @@ const AIChatInput = ({
     },
   };
 
-  const expanded = isActive || !!value || isStreaming;
+  const expanded = isActive || !!value || isStreaming || attachedFiles.length > 0;
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const getFileIcon = (type: string) => {
+    if (type.startsWith('image/')) return <FileText className="w-4 h-4 text-blue-500" />;
+    if (type === 'application/pdf') return <FileText className="w-4 h-4 text-red-500" />;
+    if (type.includes('word') || type.includes('document')) return <FileText className="w-4 h-4 text-blue-600" />;
+    return <FileText className="w-4 h-4 text-gray-500" />;
+  };
 
   return (
     <div className="w-full max-w-3xl mx-auto">
@@ -146,7 +233,7 @@ const AIChatInput = ({
         style={{
           overflow: "hidden",
           borderRadius: 32,
-          background: "#FDFBF7", // cream brand card
+          background: "#FDFBF7",
           border: "1px solid rgba(232,201,143,0.35)",
         }}
         onClick={handleActivate}
@@ -154,17 +241,34 @@ const AIChatInput = ({
         <div className="flex flex-col items-stretch w-full h-full">
           {/* ---------- Input Row ---------- */}
           <div className="flex items-center gap-2 p-3 rounded-full max-w-3xl w-full">
-            <button
-              className="p-3 rounded-full text-warm-500 hover:bg-warm-100 transition"
-              title="Attach file"
-              type="button"
-              tabIndex={-1}
-            >
-              <Paperclip size={20} />
-            </button>
+            {/* Paperclip - File Attachment */}
+            <div className="relative">
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.gif,.webp"
+                onChange={handleFileSelect}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                id="file-upload"
+                aria-label="Attach file"
+              />
+              <button
+                className="p-3 rounded-full text-warm-500 hover:bg-warm-100 transition"
+                title="Attach file"
+                type="button"
+                tabIndex={-1}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
+              >
+                <Paperclip size={20} />
+              </button>
+            </div>
 
             {/* Text Input & animated placeholder */}
-            <div className="relative flex-1">
+            <div className="relative flex-1 min-w-0">
               <input
                 ref={inputRef}
                 type="text"
@@ -172,13 +276,14 @@ const AIChatInput = ({
                 onChange={(e) => onChange(e.target.value)}
                 onKeyDown={onKeyDown}
                 onFocus={handleActivate}
-                className="flex-1 border-0 outline-0 rounded-md py-2 text-base bg-transparent w-full font-normal text-[#1C1917]"
+                className="flex-1 border-0 outline-0 rounded-md py-2 text-base bg-transparent w-full font-normal text-[#1C1917] pr-12"
                 style={{ position: "relative", zIndex: 1 }}
                 aria-label="Ask Derrick's AI Assistant"
+                placeholder=" "
               />
               <div className="absolute left-0 top-0 w-full h-full pointer-events-none flex items-center px-3 py-2">
                 <AnimatePresence mode="wait">
-                  {showPlaceholder && !isActive && !value && (
+                  {showPlaceholder && !isActive && !value && attachedFiles.length === 0 && (
                     <motion.span
                       key={placeholderIndex}
                       className="absolute left-0 top-1/2 -translate-y-1/2 text-[#78716C] select-none pointer-events-none"
@@ -210,14 +315,20 @@ const AIChatInput = ({
               </div>
             </div>
 
-            {/* Mic */}
+            {/* Mic - Voice Recording */}
             <button
-              className="p-3 rounded-full text-warm-500 hover:bg-warm-100 transition"
-              title="Voice input"
+              className={`p-3 rounded-full transition ${isRecording ? "bg-red-500 text-white" : "text-warm-500 hover:bg-warm-100"}`}
+              title={isRecording ? "Stop recording" : "Voice input"}
               type="button"
               tabIndex={-1}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleRecording?.();
+              }}
+              disabled={isStreaming}
+              aria-label={isRecording ? "Stop recording" : "Start voice recording"}
             >
-              <Mic size={20} />
+              {isRecording ? <Mic2 size={20} /> : <Mic size={20} />}
             </button>
 
             {/* Send / Stop */}
@@ -239,13 +350,46 @@ const AIChatInput = ({
                 title="Send"
                 type="button"
                 tabIndex={-1}
-                disabled={!value.trim()}
+                disabled={!value.trim() && attachedFiles.length === 0}
                 aria-label="Send message"
               >
                 <Send size={18} />
               </button>
             )}
           </div>
+
+          {/* ---------- Attached Files Preview ---------- */}
+          {attachedFiles.length > 0 && (
+            <motion.div
+              className="w-full px-4 pb-2"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+            >
+              <div className="flex flex-wrap gap-2">
+                {attachedFiles.map((file) => (
+                  <div
+                    key={file.id}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-warm-100 rounded-full text-sm"
+                  >
+                    <span className="flex items-center">{getFileIcon(file.type)}</span>
+                    <span className="text-[#1C1917] truncate max-w-[150px]">{file.name}</span>
+                    <span className="text-[#78716C] text-xs">{formatFileSize(file.size)}</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemoveFile?.(file.id);
+                      }}
+                      className="p-1 rounded-full hover:bg-warm-200 text-[#78716C] hover:text-[#1C1917]"
+                      aria-label={`Remove ${file.name}`}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
 
           {/* ---------- Expanded Controls ---------- */}
           <motion.div
@@ -285,3 +429,4 @@ const AIChatInput = ({
 };
 
 export { AIChatInput };
+export type { AttachedFile };
