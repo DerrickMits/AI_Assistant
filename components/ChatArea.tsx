@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { Sparkles, PanelLeftOpen } from "lucide-react";
 import type { UIMessage } from "@ai-sdk/ui-utils";
 import MarkdownContent from "@/components/MarkdownContent";
@@ -10,9 +10,6 @@ import { ThinkingAnimation } from "@/components/ThinkingAnimation";
 import { cn } from "@/lib/utils";
 
 interface ChatAreaProps {
-  // `useChat` exposes its turn list as `UIMessage[]` (AI SDK v5), where each
-  // message's visible text lives in `parts`, NOT a `content` field. Rendering
-  // off a nonexistent `m.content` leaves every assistant reply blank.
   messages: UIMessage[];
   isStreaming: boolean;
   inputValue: string;
@@ -29,30 +26,26 @@ interface ChatAreaProps {
   onToggleRecording?: () => void;
 }
 
-/**
- * Flatten a UIMessage's v5 `parts` into a single markdown string for
- * rendering. Only `text` parts carry model output today; reasoning / tool /
- * file parts are intentionally skipped so the transcript stays focused on the
- * answer Derrick's visitors actually see.
- */
-function textFromParts(message: UIMessage): string {
-  return message.parts
-    .filter((p): p is Extract<typeof p, { type: "text" }> => p.type === "text")
-    .map((p) => p.text)
-    .join("");
-}
+/** True when the AI is actively producing a response OR has just been
+ *  submitted and the first assistant message hasn't appeared yet. */
+function useThinkingState(messages: UIMessage[], isStreaming: boolean): boolean {
+  const turns = messages.filter((m) => m.role !== "system");
+  if (!isStreaming) return false;
 
-const SUGGESTIONS = [
-  "What does Derrick do for a living?",
-  "Summarize the Zapier automation guide.",
-  "How would Derrick set up GTD in Asana?",
-  "Which blueprints cover community building?",
-  "Explain Derrick's GoHighLevel workflow architecture.",
-  "How did Derrick improve executive focus time by 35%?",
-  "Walk me through Derrick's Salesforce admin pillars.",
-  "Which blueprints cover AI fluency for executives?",
-  "How does Derrick negotiate executive compensation?",
-];
+  // If last turn is still the user, we're waiting for the assistant to start.
+  const last = turns[turns.length - 1];
+  if (last && last.role === "user") return true;
+
+  // If last turn is assistant but has no content yet, it's streaming.
+  if (last && last.role === "assistant") {
+    const hasText = last.parts.some(
+      (p): p is Extract<typeof p, { type: "text" }> => p.type === "text" && p.text.trim().length > 0,
+    );
+    return !hasText;
+  }
+
+  return false;
+}
 
 export default function ChatArea(props: ChatAreaProps) {
   const {
@@ -61,14 +54,13 @@ export default function ChatArea(props: ChatAreaProps) {
   } = props;
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  const turns = messages.filter((m) => m.role !== "system");
-  const isEmpty = turns.length === 0;
+  const thinking = useThinkingState(messages, isStreaming);
 
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-  }, [messages]);
+  }, [messages, thinking]);
 
   return (
     <div className="relative flex-1 h-full flex flex-col min-w-0">
@@ -95,7 +87,14 @@ export default function ChatArea(props: ChatAreaProps) {
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-3xl w-full px-4 sm:px-6">
-          {isEmpty ? (
+          {/* Thinking indicator — shown when AI is processing but hasn't started streaming text yet */}
+          {thinking && (
+            <div className="pt-6">
+              <ThinkingAnimation />
+            </div>
+          )}
+
+          {isEmpty(turns) ? (
             <Greeting onPick={(s) => onChangeInput(s)} />
           ) : (
             <div className="pt-6 pb-8 space-y-6">
@@ -131,6 +130,11 @@ export default function ChatArea(props: ChatAreaProps) {
   );
 }
 
+function isEmpty(messages: UIMessage[]): boolean {
+  const turns = messages.filter((m) => m.role !== "system");
+  return turns.length === 0;
+}
+
 function Greeting({ onPick }: { onPick: (s: string) => void }) {
   return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center text-center animate-fade-up">
@@ -146,10 +150,10 @@ function Greeting({ onPick }: { onPick: (s: string) => void }) {
         Meet <span className="text-[#e8c98f]">Elara</span>
       </h1>
       <p className="mt-2 text-[15px] text-[#5f5f5f] mb-1">
-        Derrick's AI collaborator & operational assistant
+        Derrick&apos;s AI collaborator & operational assistant
       </p>
       <p className="text-[13px] text-[#8a8a8a] max-w-md">
-        Ask me anything about Derrick's career, his articles on The Ledger, or his downloadable blueprints.
+        Ask me anything about Derrick&apos;s career, his articles on The Ledger, or his downloadable blueprints.
       </p>
       <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-xl">
         {SUGGESTIONS.map((s) => (
