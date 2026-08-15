@@ -25,9 +25,9 @@ export function ThinkingAnimation({ className }: { className?: string }) {
       <div className="flex items-center gap-2 bg-[#f8f6f0]/80 border border-[#e8e8e8] rounded-2xl rounded-bl-sm px-3 sm:px-4 py-2 sm:py-2.5 shadow-sm">
         <span className="text-[12px] sm:text-[13px] text-[#5f5f5f] font-medium tracking-tight">Thinking</span>
         <Spiral
-          className="text-[#e8c98f] size-3 sm:size-3.5"
+          className="text-[#e8c98f] size-5 sm:size-6"
           dots={6}
-          radius={28}
+          radius={24}
         />
       </div>
     </div>
